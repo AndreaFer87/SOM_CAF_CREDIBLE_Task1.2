@@ -382,60 +382,96 @@ V_PAW = Delta_PAW_crit * P_water
 
 V_water = V_PAW + V_INF
 
-# =========================
-# STRUCTURE MODULE
-# =========================
 
 # =========================
-# STRUCTURE MODULE (UPDATED)
+# STRUCTURE MODULE (FINAL COHERENT VERSION)
 # =========================
 
-# 1. Bulk density change driven by SOM
+import numpy as np
+
+# -------------------------
+# 1. SOIL STRUCTURAL CHANGE (SOM EFFECT)
+# -------------------------
+
 Delta_BD = -lambda_bd[texture] * delta_SOC
 BD_new = BD_ref + Delta_BD
 
-# 2. Structural index (dimensionless)
 S_struct = BD_ref / BD_new
 
-# 3. Soil moisture proxy (ERA5-derived water balance)
-theta_soil = (df["precipitation_mm"].mean() - df["potential_evaporation_mm"].mean())
-theta_soil = theta_soil / 100  # normalization (dimensionless proxy)
 
-# 4. Plasticity threshold (texture dependent)
+# -------------------------
+# 2. SOIL WATER / TRAFFICABILITY PROXY (ERA5)
+# -------------------------
+
+theta_day = df["precipitation_mm"] - df["potential_evaporation_mm"]
+
+theta_norm = theta_day / 100.0  # normalization (dimensionless proxy)
+
 PT_value = PT[texture]
 
-# 5. Daily workability index (core equation from your text)
-W_index = S_struct / (1 + np.exp(theta_soil - PT_value))
 
-# 6. Workability threshold (agronomic constraint)
-tau = 0.5
+# -------------------------
+# 3. WORKABILITY FUNCTION (DAILY)
+# -------------------------
 
-# 7. Convert to workable days using climate series (ERA5 proxy)
-df["theta_day"] = df["precipitation_mm"] - df["potential_evaporation_mm"]
+W_index = S_struct / (1 + np.exp(theta_norm - PT_value))
 
-df["workable"] = (
-    S_struct / (1 + np.exp(df["theta_day"] / 100 - PT_value))
-) > tau
+tau = 0.5  # operational threshold
+
+df["workable"] = (W_index > tau)
 
 W_days = df["workable"].sum() / df["date"].dt.year.nunique()
 
-# 8. baseline comparison (no SOM improvement)
-BD_base = BD_ref
+
+# -------------------------
+# 4. BASELINE (NO SOM IMPROVEMENT)
+# -------------------------
+
 S_base = 1.0
 
-df["workable_base"] = (
-    S_base / (1 + np.exp(df["theta_day"] / 100 - PT_value))
-) > tau
+W_index_base = S_base / (1 + np.exp(theta_norm - PT_value))
+
+df["workable_base"] = (W_index_base > tau)
 
 W_days_base = df["workable_base"].sum() / df["date"].dt.year.nunique()
 
-# 9. improvement
-Delta_W_days = W_days - W_days_base
-Delta_W_days = max(Delta_W_days, 0)
 
-# 10. operational translation
-H_saved = Delta_W_days * 0.5   # hours/day/ha
-F_saved = Delta_W_days * 0.2   # L/day/ha
+# -------------------------
+# 5. Δ WORKABLE DAYS
+# -------------------------
+
+Delta_W_days = max(W_days - W_days_base, 0)
+
+
+# -------------------------
+# 6. OPERATIONAL WINDOWS (KEY FIX)
+# -------------------------
+# pre-seeding + harvest only (agronomic realism)
+
+pre_sowing_factor = 0.65
+harvest_factor = 0.35
+
+Delta_W_pre = Delta_W_days * pre_sowing_factor
+Delta_W_harv = Delta_W_days * harvest_factor
+
+
+# -------------------------
+# 7. MACHINERY COST TRANSLATION
+# -------------------------
+
+H_pre = 2.0   # h/ha per workable day (pre-seeding operations)
+H_harv = 2.5  # h/ha per workable day (harvest operations)
+
+F_pre = 12.0   # L/ha per day (IMPORTANT: >10 L/ha as requested)
+F_harv = 8.0   # L/ha per day (lower than pre-seeding)
+
+H_saved = (Delta_W_pre * H_pre) + (Delta_W_harv * H_harv)
+F_saved = (Delta_W_pre * F_pre) + (Delta_W_harv * F_harv)
+
+
+# -------------------------
+# 8. ECONOMIC VALUE
+# -------------------------
 
 V_structure = (H_saved * C_machinery) + (F_saved * P_diesel)
 
