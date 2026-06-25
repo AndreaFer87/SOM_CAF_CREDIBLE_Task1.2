@@ -132,18 +132,40 @@ U_m = {
     "senescence": 0.1
 }
 
+U_m_total = sum(U_m.values())
+
 f_crop = {
     "winter cereals": ["establishment","vegetative_peak","reproductive","senescence"],
     "maize": ["establishment","vegetative_peak","reproductive","senescence"],
     "soybean": ["establishment","vegetative_peak","reproductive","senescence"]
 }
 
+crop_calendar = {
+    "winter cereals": {"months": 10, "intensity": 0.85},
+    "maize": {"months": 5, "intensity": 0.65},
+    "soybean": {"months": 5, "intensity": 0.60},
+    "tomato": {"months": 6, "intensity": 0.75}
+}
+
+f_crop = months/12 * intensity
+
 N_crop = 0
 
 for c in crops:
+
     stages = f_crop.get(c, [])
+    duration = crop_duration_factor[c]
+
+    stage_sum = 0
+
     for s in stages:
-        N_crop += N_min * U_m[s]
+        stage_sum += U_m[s]
+
+    stage_fraction = stage_sum / U_m_total
+
+    N_crop += N_min * stage_fraction * duration
+
+N_crop = min(N_crop, N_min)
 
 
 V_N = N_crop * P_N
