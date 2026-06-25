@@ -259,6 +259,29 @@ col3.metric("Workability index", round(W_index,3))
 
 st.success(f"💰 TOTAL VSoM = {round(V_SOM,2)} €/ha/year")
 
+
+# =========================
+# NUTRIENT OUTPUT SUMMARY
+# =========================
+
+st.subheader("🌱 Nutrient Mineralisation Summary (Rotation average)")
+
+colA, colB, colC, colD = st.columns(4)
+
+colA.metric("N mineralised (kg/ha/yr)", round(N_crop, 2))
+colB.metric("P available (kg/ha/yr)", round(P_avail, 2))
+colC.metric("S available (kg/ha/yr)", round(S_avail, 2))
+colD.metric("Total nutrient value (€)", round(V_nutrients, 2))
+
+# breakdown
+total_n = N_crop + P_avail + S_avail
+
+if total_n > 0:
+    st.write("### Nutrient contribution (%)")
+    st.write(f"N: {N_crop/total_n:.1%}")
+    st.write(f"P: {P_avail/total_n:.1%}")
+    st.write(f"S: {S_avail/total_n:.1%}")
+
 # =========================
 # PLOT BREAKDOWN
 # =========================
