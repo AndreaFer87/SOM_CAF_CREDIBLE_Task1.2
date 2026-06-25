@@ -155,10 +155,30 @@ crop_calendar = {
 
 # phenology weights (fraction of N demand over season)
 U_m = {
-    "establishment": 0.1,
-    "vegetative_peak": 0.5,
-    "reproductive": 0.3,
-    "senescence": 0.1
+    "winter cereals": {
+        "establishment": 0.15,
+        "vegetative_peak": 0.45,
+        "reproductive": 0.30,
+        "senescence": 0.10
+    },
+    "maize": {
+        "establishment": 0.10,
+        "vegetative_peak": 0.60,
+        "reproductive": 0.25,
+        "senescence": 0.05
+    },
+    "soybean": {
+        "establishment": 0.10,
+        "vegetative_peak": 0.35,
+        "reproductive": 0.45,
+        "senescence": 0.10
+    },
+    "tomato": {
+        "establishment": 0.15,
+        "vegetative_peak": 0.40,
+        "reproductive": 0.35,
+        "senescence": 0.10
+    }
 }
 
 U_m_total = sum(U_m.values())
@@ -183,7 +203,7 @@ for c in crops:
 
     duration = (crop_calendar[c]["months"] / 12) * crop_calendar[c]["intensity"]
 
-    stage_sum = sum([U_m[s] for s in stages])
+    stage_sum = sum(U_m[c][s] for s in stages)
 
     f_crop = stage_sum / U_m_total
 
