@@ -146,62 +146,43 @@ S_avail = SOM_functional * S_C * eta_S[texture]* 0.3 * 100000 * BD_ref * f_labil
 # =========================
 
 crop_calendar = {
-    "winter cereals": {"months": 10, "intensity": 0.7},
-    "maize": {"months": 5, "intensity":0.9},
-    "soybean": {"months": 5, "intensity": 0.30},
-    "tomato": {"months": 6, "intensity": 0.9}
+    "winter cereals": {"months": 10},
+    "maize": {"months": 5},
+    "soybean": {"months": 5},
+    "tomato": {"months": 6}
 }
-
-# phenology weights (fraction of N demand over season)
-U_m = {
-    "winter cereals": {
-        "establishment": 0.15,
-        "vegetative_peak": 0.45,
-        "reproductive": 0.30,
-        "senescence": 0.10
-    },
-    "maize": {
-        "establishment": 0.10,
-        "vegetative_peak": 0.60,
-        "reproductive": 0.25,
-        "senescence": 0.05
-    },
-    "soybean": {
-        "establishment": 0.10,
-        "vegetative_peak": 0.35,
-        "reproductive": 0.45,
-        "senescence": 0.10
-    },
-    "tomato": {
-        "establishment": 0.15,
-        "vegetative_peak": 0.40,
-        "reproductive": 0.35,
-        "senescence": 0.10
-    }
-}
-
-crop_N_demand_factor = {
-    "winter cereals": 1.0,
-    "maize": 1.4,
-    "soybean": 0.6,
-    "tomato": 1.6
-}
-
 
 # =========================
 # N CROP CALCULATION
 # =========================
 
-N_crop_total = 0 
+def build_crop_month_profile(crop, crop_calendar, U_m):
+    M = crop_calendar[crop]["months"]
+    phen = U_m[crop]
 
-for c in crops: 
-    duration = crop_calendar[c]["months"]/12 * crop_calendar[c]["intensity"] 
-    phenology = U_m[c] 
-    phenology_factor = sum(phenology.values()) # = 1 ma lo lasci per estensioni 
-    demand_factor = crop_N_demand_factor[c] 
-    N_crop_c = N_min * duration * demand_factor 
-    N_crop_total += N_crop_c 
-    N_crop = N_crop_total / years
+    profile = {}
+
+    for k, v in phen.items():
+        profile[k] = v * M   # mesi per fase
+
+    return profile
+
+N_month = N_min / 12
+
+N_crop_total = 0
+
+for c in crops:
+
+    M = crop_calendar[c]["months"]
+
+    phen_profile = build_crop_month_profile(c, crop_calendar, U_m)
+
+    # coltura "consuma" N durante i suoi mesi attivi
+    N_crop_c = N_month * M
+
+    N_crop_total += N_crop_c
+
+N_crop = N_crop_total / years
 
 V_N = N_crop * P_N
 V_P = P_avail * P_P
