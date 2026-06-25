@@ -284,7 +284,22 @@ f_crit = compute_f_crit(monthly)
 Delta_PAW_crit = Delta_PAW * f_crit
 
 
-I0=10
+Ks_map = {
+    "sand": 40,      # mm/h
+    "loam": 20,
+    "clay loam": 10,
+    "clay": 5
+}
+Ks = Ks_map[texture]
+
+phi_map = {
+    "compacted": 0.6,
+    "normal": 0.9,
+    "well_structured": 1.2
+}
+
+phi = phi_map["normal"]  # oppure lo rendiamo dinamico dopo
+
 
 phi_struct = {
     "sand": 1.2,
@@ -318,6 +333,8 @@ events = df[df["P_k"] > rain_threshold].copy()
 events["I_rain_k"] = events["P_k"] / events["t_k"]
 
 texture_factor = phi_struct[texture]
+
+I0 = Ks * phi
 
 # baseline infiltration capacity (mm/h)
 I0_event = I0 * texture_factor
