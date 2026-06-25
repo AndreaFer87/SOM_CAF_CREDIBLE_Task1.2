@@ -384,7 +384,7 @@ V_water = V_PAW + V_INF
 
 
 # =========================
-# STRUCTURE MODULE (FINAL COHERENT VERSION)
+# STRUCTURE MODULE (FINAL FIXED VERSION)
 # =========================
 
 import numpy as np
@@ -404,49 +404,58 @@ S_struct = BD_ref / BD_new
 # -------------------------
 
 theta_day = df["precipitation_mm"] - df["potential_evaporation_mm"]
-
-theta_norm = theta_day / 100.0  # normalization (dimensionless proxy)
+theta_norm = theta_day / 100.0
 
 PT_value = PT[texture]
 
 
 # -------------------------
-# 3. WORKABILITY FUNCTION (DAILY)
+# 3. DAILY WORKABILITY INDEX (ARRAY)
 # -------------------------
 
 W_index = S_struct / (1 + np.exp(theta_norm - PT_value))
 
-tau = 0.5  # operational threshold
+W_index_base = 1.0 / (1 + np.exp(theta_norm - PT_value))
 
-df["workable"] = (W_index > tau)
-
-W_days = df["workable"].sum() / df["date"].dt.year.nunique()
+tau = 0.5
 
 
 # -------------------------
-# 4. BASELINE (NO SOM IMPROVEMENT)
+# 4. SAFE NUMERIC CLEANING (CRITICAL FIX FOR STREAMLIT)
 # -------------------------
 
-S_base = 1.0
-
-W_index_base = S_base / (1 + np.exp(theta_norm - PT_value))
-
-df["workable_base"] = (W_index_base > tau)
-
-W_days_base = df["workable_base"].sum() / df["date"].dt.year.nunique()
+W_index_clean = np.nan_to_num(W_index, nan=0.0, posinf=0.0, neginf=0.0)
+W_index_base_clean = np.nan_to_num(W_index_base, nan=0.0, posinf=0.0, neginf=0.0)
 
 
 # -------------------------
-# 5. Δ WORKABLE DAYS
+# 5. WORKABILITY (DAILY → BOOLEAN)
+# -------------------------
+
+df["workable"] = (W_index_clean > tau)
+df["workable_base"] = (W_index_base_clean > tau)
+
+
+# -------------------------
+# 6. WORKABLE DAYS (ANNUALIZED)
+# -------------------------
+
+years = df["date"].dt.year.nunique()
+
+W_days = df["workable"].sum() / years
+W_days_base = df["workable_base"].sum() / years
+
+
+# -------------------------
+# 7. Δ WORKABLE DAYS
 # -------------------------
 
 Delta_W_days = max(W_days - W_days_base, 0)
 
 
 # -------------------------
-# 6. OPERATIONAL WINDOWS (KEY FIX)
+# 8. OPERATIONAL WINDOWS (PRE-SEEDING + HARVEST)
 # -------------------------
-# pre-seeding + harvest only (agronomic realism)
 
 pre_sowing_factor = 0.65
 harvest_factor = 0.35
@@ -456,24 +465,32 @@ Delta_W_harv = Delta_W_days * harvest_factor
 
 
 # -------------------------
-# 7. MACHINERY COST TRANSLATION
+# 9. MACHINERY + FUEL TRANSLATION
 # -------------------------
 
-H_pre = 2.0   # h/ha per workable day (pre-seeding operations)
-H_harv = 2.5  # h/ha per workable day (harvest operations)
+H_pre = 2.0
+H_harv = 2.5
 
-F_pre = 12.0   # L/ha per day (IMPORTANT: >10 L/ha as requested)
-F_harv = 8.0   # L/ha per day (lower than pre-seeding)
+# IMPORTANT: your constraint (>10 L/ha pre-seeding)
+F_pre = 12.0
+F_harv = 8.0
 
 H_saved = (Delta_W_pre * H_pre) + (Delta_W_harv * H_harv)
 F_saved = (Delta_W_pre * F_pre) + (Delta_W_harv * F_harv)
 
 
 # -------------------------
-# 8. ECONOMIC VALUE
+# 10. ECONOMIC VALUE
 # -------------------------
 
 V_structure = (H_saved * C_machinery) + (F_saved * P_diesel)
+
+
+# -------------------------
+# 11. STREAMLIT SAFE OUTPUT VALUE (OPTIONAL BUT RECOMMENDED)
+# -------------------------
+
+W_index_mean = float(np.nanmean(W_index_clean))
 
 # =========================
 # TOTAL VALUE
