@@ -303,8 +303,6 @@ theta_infiltration = {
 t_event_default = 6  # hours (ERA5 daily proxy)
 rain_threshold = 10  # mm
 
-df = pd.read_csv("era5_processed_daily_data_id_crp_103.csv")
-
 df["date"] = pd.to_datetime(df["date"])
 
 # rainfall (mm/day)
