@@ -180,67 +180,57 @@ U_m = {
 }
 
 # =========================
-# N CROP MODULE (TEMPORAL + CROP-SPECIFIC PHENOLOGY)
+# N CROP MODULE (CORRECT STRUCTURE)
 # =========================
 
 import numpy as np
 
-def build_crop_month_profile(crop, crop_calendar, U_m, n_months=12):
-    """
-    Converts crop-specific phenology into a monthly uptake shape.
-    Output sums to 1 over crop season.
-    """
+n_months = 12
 
-    phen = U_m[crop]
+# 1. distribuzione base del N mineralizzato nel tempo (uniforme o stagionale semplificata)
+N_monthly_base = np.ones(n_months) * (N_min / n_months)
 
-    # normalize phenology weights
-    phases = list(phen.keys())
-    w = np.array(list(phen.values()), dtype=float)
-    w = w / w.sum()
-
-    months = int(round(crop_calendar[crop]["months"]))
-    profile = np.zeros(n_months)
-
-    for m in range(months):
-        # map month → phenological phase
-        phase_idx = int(m / months * len(phases))
-        phase_idx = min(phase_idx, len(phases) - 1)
-
-        profile[m] = w[phase_idx]
-
-    return profile
-
-
-# -------------------------
-# CROP-LEVEL N ALLOCATION
-# -------------------------
-
-N_total_profile = np.zeros(12)
+# 2. accumulatore rotazione
+N_total_profile = np.zeros(n_months)
 
 for c in crops:
 
-    # crop duration in yearly fraction
-    duration_factor = crop_calendar[c]["months"] / 12.0
+    months = crop_calendar[c]["months"]
+    intensity = crop_calendar[c].get("intensity", 1.0)
 
-    # phenology-driven monthly uptake shape
-    crop_profile = build_crop_month_profile(c, crop_calendar, U_m)
+    # mesi occupati dalla coltura nella rotazione
+    active_months = int(round(months))
 
-    # scale by occupancy of rotation
-    crop_profile = crop_profile * duration_factor
+    # distribuzione fenologica crop-specifica
+    phen = U_m[c]
+    phen_weights = np.array(list(phen.values()), dtype=float)
+    phen_weights = phen_weights / phen_weights.sum()
 
-    # contribution to soil N mineralisation pool
-    N_total_profile += N_min * crop_profile
+    crop_profile = np.zeros(n_months)
 
+    for m in range(active_months):
 
-# -------------------------
-# ROTATION NORMALISATION
-# -------------------------
+        # mappa mese → fase fenologica
+        phase_idx = int(m / active_months * len(phen_weights))
+        phase_idx = min(phase_idx, len(phen_weights) - 1)
 
-# total annual N crop uptake
+        crop_profile[m] = phen_weights[phase_idx]
+
+    # normalizza sul periodo colturale
+    crop_profile = crop_profile / crop_profile.sum()
+
+    # scala per durata e intensità
+    crop_profile = crop_profile * (months / 12.0) * intensity
+
+    # applica N mineralizzato disponibile
+    N_total_profile += N_monthly_base * crop_profile
+
+# 3. somma annuale
 N_crop = N_total_profile.sum()
 
-# average per rotation year
+# 4. normalizzazione corretta per anni di rotazione
 N_crop = N_crop / years
+
 
 V_N = N_crop * P_N
 V_P = P_avail * P_P
