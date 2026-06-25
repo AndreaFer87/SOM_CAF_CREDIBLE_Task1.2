@@ -172,6 +172,28 @@ U_m = {
     }
 }
 
+crop_structure_weights = {
+    "winter cereals": {
+        "pre_sowing": 0.8,
+        "harvest": 0.6,
+        "traffic_sensitivity": 0.7
+    },
+    "maize": {
+        "pre_sowing": 0.9,
+        "harvest": 0.8,
+        "traffic_sensitivity": 0.85
+    },
+    "soybean": {
+        "pre_sowing": 0.6,
+        "harvest": 0.7,
+        "traffic_sensitivity": 0.65
+    },
+    "tomato": {
+        "pre_sowing": 0.85,
+        "harvest": 0.95,
+        "traffic_sensitivity": 0.9
+    }
+}
 # =========================
 # N CROP MODULE (SEQUENTIAL ROTATION FIX)
 # =========================
@@ -389,19 +411,19 @@ V_water = V_PAW + V_INF
 
 import numpy as np
 
-# -------------------------
-# 1. SOIL STRUCTURAL CHANGE (SOM EFFECT)
-# -------------------------
+# =========================
+# 1. SOIL STRUCTURE EFFECT (SOM → BD)
+# =========================
 
 Delta_BD = -lambda_bd[texture] * delta_SOC
 BD_new = BD_ref + Delta_BD
 
-S_struct = BD_ref / BD_new
+S_struct = BD_ref / BD_new  # scalar
 
 
-# -------------------------
-# 2. SOIL WATER / TRAFFICABILITY PROXY (ERA5)
-# -------------------------
+# =========================
+# 2. CLIMATE MOISTURE PROXY (ERA5 DAILY)
+# =========================
 
 theta_day = df["precipitation_mm"] - df["potential_evaporation_mm"]
 theta_norm = theta_day / 100.0
@@ -409,94 +431,70 @@ theta_norm = theta_day / 100.0
 PT_value = PT[texture]
 
 
-# -------------------------
-# 3. DAILY WORKABILITY INDEX (ARRAY)
-# -------------------------
-
-W_index = S_struct / (1 + np.exp(theta_norm - PT_value))
+# =========================
+# 3. WORKABILITY INDEX (DAILY SERIES)
+# =========================
 
 W_index_base = 1.0 / (1 + np.exp(theta_norm - PT_value))
+W_index_new  = S_struct / (1 + np.exp(theta_norm - PT_value))
 
 tau = 0.5
 
 
-# -------------------------
-# 4. SAFE NUMERIC CLEANING (CRITICAL FIX FOR STREAMLIT)
-# -------------------------
+# =========================
+# 4. WORKABLE DAYS (BASE + NEW)
+# =========================
 
-W_index_clean = np.nan_to_num(W_index, nan=0.0, posinf=0.0, neginf=0.0)
-W_index_base_clean = np.nan_to_num(W_index_base, nan=0.0, posinf=0.0, neginf=0.0)
+df["workable_base"] = W_index_base > tau
+df["workable_new"]  = W_index_new > tau
 
+W_days_base = df["workable_base"].sum() / df["date"].dt.year.nunique()
+W_days_new  = df["workable_new"].sum() / df["date"].dt.year.nunique()
 
-# -------------------------
-# 5. WORKABILITY (DAILY → BOOLEAN)
-# -------------------------
-
-df["workable"] = (W_index_clean > tau)
-df["workable_base"] = (W_index_base_clean > tau)
+Delta_W_days = max(W_days_new - W_days_base, 0)
 
 
-# -------------------------
-# 6. WORKABLE DAYS (ANNUALIZED)
-# -------------------------
+# =========================
+# 5. CROP WEIGHTING (OPERATIONAL WINDOWS)
+# =========================
 
-years = df["date"].dt.year.nunique()
+w_pre_total = 0
+w_harv_total = 0
 
-W_days = df["workable"].sum() / years
-W_days_base = df["workable_base"].sum() / years
+for c in crops:
+    w = crop_structure_weights[c]
+    w_pre_total += w["pre_sowing"]
+    w_harv_total += w["harvest"]
 
+w_sum = w_pre_total + w_harv_total + 1e-9
 
-# -------------------------
-# 7. Δ WORKABLE DAYS
-# -------------------------
-
-Delta_W_days = max(W_days - W_days_base, 0)
-
-
-# -------------------------
-# 8. OPERATIONAL WINDOWS (PRE-SEEDING + HARVEST)
-# -------------------------
-
-pre_sowing_factor = 0.65
-harvest_factor = 0.35
-
-Delta_W_pre = Delta_W_days * pre_sowing_factor
-Delta_W_harv = Delta_W_days * harvest_factor
+w_pre = w_pre_total / w_sum
+w_harv = w_harv_total / w_sum
 
 
-# -------------------------
-# 9. MACHINERY + FUEL TRANSLATION
-# -------------------------
+Delta_W_pre = Delta_W_days * w_pre
+Delta_W_harv = Delta_W_days * w_harv
+
+
+# =========================
+# 6. OPERATIONAL TRANSLATION
+# =========================
 
 H_pre = 2.0
 H_harv = 2.5
 
-# IMPORTANT: your constraint (>10 L/ha pre-seeding)
-F_pre = 12.0
+F_pre = 12.0   # 👈 coerente con tuo vincolo (>10 L/ha pre-seeding)
 F_harv = 8.0
 
 H_saved = (Delta_W_pre * H_pre) + (Delta_W_harv * H_harv)
 F_saved = (Delta_W_pre * F_pre) + (Delta_W_harv * F_harv)
 
 
-# -------------------------
-# 10. ECONOMIC VALUE
-# -------------------------
+# =========================
+# 7. ECONOMIC VALUE
+# =========================
 
 V_structure = (H_saved * C_machinery) + (F_saved * P_diesel)
-
-
-# -------------------------
-# 11. STREAMLIT SAFE OUTPUT VALUE (OPTIONAL BUT RECOMMENDED)
-# -------------------------
-
-W_index_mean = float(np.nanmean(W_index_clean))
-
-# =========================
-# TOTAL VALUE
-# =========================
-
-V_SOM = V_nutrients + V_water + V_structure
 
 # =========================
 # OUTPUT
