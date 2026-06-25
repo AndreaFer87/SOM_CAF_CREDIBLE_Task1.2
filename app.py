@@ -106,7 +106,7 @@ eta_S = {
 P_C = 0.003   # mid of 0.001–0.005
 S_C = 0.0012  # mid of 0.0005–0.002
 
-alpha = {"sand":1.2, "loam":2.0, "clay loam":2.5, "clay":3.0}
+alpha = {"sand":3.0, "loam":2.5, "clay loam":2.2, "clay":2}
 
 lambda_bd = {"sand":0.05, "loam":0.12, "clay loam":0.18, "clay":0.25}
 
@@ -238,7 +238,17 @@ V_nutrients = V_N + V_P + V_S
 # WATER MODULE
 # =========================
 
-Delta_PAW = alpha[texture] * (z_eff/10) * delta_SOC
+delta_SOC_percent = delta_SOC/10/10/0.3/BD_ref
+
+SOC_effect_layer = 10  # cm
+
+Delta_PAW_surface = alpha[texture] * delta_SOC_percent
+
+root_access_factor = 1 - np.exp(-z_eff / 15)
+
+Delta_PAW = Delta_PAW_surface * root_access_factor
+    
+Delta_PAW = alpha[texture] * * depth_response(z_eff) * delta_SOC_percent
 Delta_PAW_crit = Delta_PAW * f_crit
 
 I_new = I0 * (1 + theta_infiltration[texture] * delta_SOC)
