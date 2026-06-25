@@ -156,33 +156,21 @@ crop_calendar = {
 # N CROP CALCULATION
 # =========================
 
-def build_crop_month_profile(crop, crop_calendar, U_m):
-    M = crop_calendar[crop]["months"]
-    phen = U_m[crop]
-
-    profile = {}
-
-    for k, v in phen.items():
-        profile[k] = v * M   # mesi per fase
-
-    return profile
-
-N_month = N_min / 12
-
-N_crop_total = 0
+months = 12
+N_crop_profile = np.zeros(months)
 
 for c in crops:
+    phen = U_m[c]
 
-    M = crop_calendar[c]["months"]
+    duration_months = int(crop_calendar[c]["months"])
 
-    phen_profile = build_crop_month_profile(c, crop_calendar, U_m)
+    # distribuzione semplificata
+    weights = np.array(list(phen.values()))
+    weights = weights / weights.sum()
 
-    # coltura "consuma" N durante i suoi mesi attivi
-    N_crop_c = N_month * M
+    N_crop_profile[:duration_months] += N_min * weights[:duration_months]
 
-    N_crop_total += N_crop_c
-
-N_crop = N_crop_total / years
+N_crop = N_crop_profile.sum() / years
 
 V_N = N_crop * P_N
 V_P = P_avail * P_P
