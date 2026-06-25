@@ -35,9 +35,6 @@ years = st.sidebar.slider(
     1, 10, 3
 )
 
-st.sidebar.header("Climate / Water")
-
-I0 = st.sidebar.number_input("I0 infiltration capacity", value=10.0)
 
 st.sidebar.header("Economic parameters")
 
@@ -108,8 +105,6 @@ S_C = 0.0012  # mid of 0.0005–0.002
 alpha = {"sand":3.0, "loam":2.5, "clay loam":2.2, "clay":2}
 
 lambda_bd = {"sand":0.05, "loam":0.12, "clay loam":0.18, "clay":0.25}
-
-theta_infiltration = {"sand":0.3, "loam":0.4, "clay loam":0.5, "clay":0.6}
 
 PT = {"sand":0.2, "loam":0.3, "clay loam":0.4, "clay":0.45}
 
@@ -288,9 +283,65 @@ f_crit = compute_f_crit(monthly)
 # crop stress relevance weighting
 Delta_PAW_crit = Delta_PAW * f_crit
 
-I_new = I0 * (1 + theta_infiltration[texture] * delta_SOC)
 
-Delta_INF = max((I_new - I0) * 50, 0)
+I0=10
+
+phi_struct = {
+    "sand": 1.2,
+    "loam": 1.0,
+    "clay loam": 0.9,
+    "clay": 0.8
+}
+
+theta_infiltration = {
+    "sand": 0.07,      # low sensitivity
+    "loam": 0.15,      # medium
+    "clay loam": 0.20,
+    "clay": 0.25        # high structural response
+}
+
+t_event_default = 6  # hours (ERA5 daily proxy)
+rain_threshold = 10  # mm
+
+df = pd.read_csv("era5_processed_daily_data_id_crp_103.csv")
+
+df["date"] = pd.to_datetime(df["date"])
+
+# rainfall (mm/day)
+df["P_k"] = df["precipitation_mm"]
+
+# evap / not needed here but optional
+df["t_k"] = t_event_default  # proxy ERA5 daily
+
+# event filtering (only meaningful rainfall events)
+events = df[df["P_k"] > rain_threshold].copy()
+
+# intensity (not strictly needed but consistent with theory)
+events["I_rain_k"] = events["P_k"] / events["t_k"]
+
+texture_factor = phi_struct[texture]
+
+# baseline infiltration capacity (mm/h)
+I0_event = I0 * texture_factor
+
+def INF_base(Pk, tk):
+    return np.minimum(I0_event * tk, Pk)
+
+
+I_new_event = I0_event * (1 + theta_infiltration[texture] * delta_SOC_percent)
+
+def INF_new(Pk, tk):
+    return np.minimum(I_new_event * tk, Pk)
+
+events["INF_base"] = events.apply(lambda r: INF_base(r["P_k"], r["t_k"]), axis=1)
+events["INF_new"]  = events.apply(lambda r: INF_new(r["P_k"], r["t_k"]), axis=1)
+
+events["Delta_INF_k"] = events["INF_new"] - events["INF_base"]
+events["Delta_INF_k"] = events["Delta_INF_k"].clip(lower=0)
+
+n_years = events["date"].dt.year.nunique()
+
+Delta_INF = events["Delta_INF_k"].sum() / n_years
 
 V_PAW = Delta_PAW_crit * P_water
 V_INF = Delta_INF * P_flood
