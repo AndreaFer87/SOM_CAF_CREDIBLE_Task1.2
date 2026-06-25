@@ -23,6 +23,18 @@ BD_ref = st.sidebar.number_input("Bulk density (g/cm3)", value=1.3)
 
 z_eff = st.sidebar.number_input("Effective rooting depth (cm)", value=30)
 
+st.sidebar.header("Crop rotation")
+crops = st.sidebar.multiselect(
+    "Crop rotation",
+    ["winter cereals", "maize", "soybean", "tomato"],
+    default=["winter cereals", "maize"]
+)
+
+years = st.sidebar.slider(
+    "Rotation length (years)",
+    1, 10, 3
+)
+
 st.sidebar.header("Climate / Water")
 
 f_crit = st.sidebar.slider("f_crit (0-1)", 0.0, 1.0, 0.6)
@@ -125,6 +137,18 @@ P_avail = SOM_functional * P_C * eta_P[texture]* 0.3 * 100000 * BD_ref
 S_avail = SOM_functional * S_C * eta_S[texture]* 0.3 * 100000 * BD_ref
 
 
+# =========================
+# CROP CALENDAR (NEW CORRECT STRUCTURE)
+# =========================
+
+crop_calendar = {
+    "winter cereals": {"months": 10, "intensity": 0.85},
+    "maize": {"months": 5, "intensity": 0.65},
+    "soybean": {"months": 5, "intensity": 0.60},
+    "tomato": {"months": 6, "intensity": 0.75}
+}
+
+# phenology weights (fraction of N demand over season)
 U_m = {
     "establishment": 0.2,
     "vegetative_peak": 1.0,
@@ -134,38 +158,36 @@ U_m = {
 
 U_m_total = sum(U_m.values())
 
-f_crop = {
+# crop phenology structure (NOT overwritten anymore)
+crop_phenology = {
     "winter cereals": ["establishment","vegetative_peak","reproductive","senescence"],
     "maize": ["establishment","vegetative_peak","reproductive","senescence"],
-    "soybean": ["establishment","vegetative_peak","reproductive","senescence"]
+    "soybean": ["establishment","vegetative_peak","reproductive","senescence"],
+    "tomato": ["establishment","vegetative_peak","reproductive","senescence"]
 }
 
-crop_calendar = {
-    "winter cereals": {"months": 10, "intensity": 0.85},
-    "maize": {"months": 5, "intensity": 0.65},
-    "soybean": {"months": 5, "intensity": 0.60},
-    "tomato": {"months": 6, "intensity": 0.75}
-}
+# =========================
+# N CROP CALCULATION
+# =========================
 
-f_crop = months/12 * intensity
-
-N_crop = 0
+N_crop_total = 0
 
 for c in crops:
 
-    stages = f_crop.get(c, [])
-    duration = crop_duration_factor[c]
+    stages = crop_phenology[c]
 
-    stage_sum = 0
+    duration = (crop_calendar[c]["months"] / 12) * crop_calendar[c]["intensity"]
 
-    for s in stages:
-        stage_sum += U_m[s]
+    stage_sum = sum([U_m[s] for s in stages])
 
-    stage_fraction = stage_sum / U_m_total
+    f_crop = stage_sum / U_m_total
 
-    N_crop += N_min * stage_fraction * duration
+    N_crop_c = N_min * f_crop * duration
 
-N_crop = min(N_crop, N_min)
+    N_crop_total += N_crop_c
+
+# rotation average
+N_crop = N_crop_total / years
 
 
 V_N = N_crop * P_N
