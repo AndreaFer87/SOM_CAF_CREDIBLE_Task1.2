@@ -437,6 +437,8 @@ PT_value = PT[texture]
 
 W_index_base = 1.0 / (1 + np.exp(theta_norm - PT_value))
 W_index_new  = S_struct / (1 + np.exp(theta_norm - PT_value))
+W_index_clean = np.nan_to_num(W_index_new, nan=0.0)
+
 
 tau = 0.5
 
@@ -512,9 +514,16 @@ col2.metric("ΔINF proxy", round(Delta_INF,2))
 
 col3.metric("🧱 Structure Value (€)", round(V_structure,2))
 col3.metric("ΔBD", round(Delta_BD,3))
-workability_mean = np.nanmean(W_index_clean)
-workability_weighted = W_days / (len(df) / df["date"].dt.year.nunique())
-col3.metric("Workability index", round(np.nanmean(W_index_clean), 3))
+
+workability_mean = float(np.nanmean(W_index_clean))
+workability_prob = float(np.mean(W_index_clean > tau))
+years = df["date"].dt.year.nunique()
+
+workability_days = float(np.sum(W_index_clean > tau) / years)
+
+col3.metric("Workability index (mean)", round(workability_mean, 3))
+col3.metric("Workability probability", round(workability_prob, 3))
+col3.metric("Workable days/year", round(workability_days, 1))
 
 st.success(f"💰 TOTAL VSoM = {round(V_SOM,2)} €/ha/year")
 
