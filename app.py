@@ -116,7 +116,7 @@ crops = st.sidebar.multiselect(
     default=["winter cereals"]
 )
 
-SOM_functional = SOC/10/10/BD/0.3 * k_SOM_map[texture]
+SOM_functional = SOC/10/10/BD_ref/0.3 * k_SOM_map[texture]
 
 C_N = 10
 
