@@ -514,7 +514,9 @@ col2.metric("ΔINF proxy", round(Delta_INF,2))
 
 col3.metric("🧱 Structure Value (€)", round(V_structure,2))
 col3.metric("ΔBD", round(Delta_BD,3))
-col3.metric("Workability index", round(W_index,3))
+workability_mean = np.nanmean(W_index_clean)
+workability_weighted = W_days / (len(df) / df["date"].dt.year.nunique())
+col3.metric("Workability index", round(np.nanmean(W_index_clean), 3))
 
 st.success(f"💰 TOTAL VSoM = {round(V_SOM,2)} €/ha/year")
 
