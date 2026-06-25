@@ -152,25 +152,95 @@ crop_calendar = {
     "tomato": {"months": 6}
 }
 
+U_m = {
+    "winter cereals": {
+        "establishment": 0.15,
+        "vegetative_peak": 0.45,
+        "reproductive": 0.30,
+        "senescence": 0.10
+    },
+    "maize": {
+        "establishment": 0.10,
+        "vegetative_peak": 0.60,
+        "reproductive": 0.25,
+        "senescence": 0.05
+    },
+    "soybean": {
+        "establishment": 0.10,
+        "vegetative_peak": 0.35,
+        "reproductive": 0.45,
+        "senescence": 0.10
+    },
+    "tomato": {
+        "establishment": 0.15,
+        "vegetative_peak": 0.40,
+        "reproductive": 0.35,
+        "senescence": 0.10
+    }
+}
+
 # =========================
-# N CROP CALCULATION
+# N CROP MODULE (TEMPORAL + CROP-SPECIFIC PHENOLOGY)
 # =========================
 
-months = 12
-N_crop_profile = np.zeros(months)
+import numpy as np
+
+def build_crop_month_profile(crop, crop_calendar, U_m, n_months=12):
+    """
+    Converts crop-specific phenology into a monthly uptake shape.
+    Output sums to 1 over crop season.
+    """
+
+    phen = U_m[crop]
+
+    # normalize phenology weights
+    phases = list(phen.keys())
+    w = np.array(list(phen.values()), dtype=float)
+    w = w / w.sum()
+
+    months = int(round(crop_calendar[crop]["months"]))
+    profile = np.zeros(n_months)
+
+    for m in range(months):
+        # map month → phenological phase
+        phase_idx = int(m / months * len(phases))
+        phase_idx = min(phase_idx, len(phases) - 1)
+
+        profile[m] = w[phase_idx]
+
+    return profile
+
+
+# -------------------------
+# CROP-LEVEL N ALLOCATION
+# -------------------------
+
+N_total_profile = np.zeros(12)
 
 for c in crops:
-    phen = U_m[c]
 
-    duration_months = int(crop_calendar[c]["months"])
+    # crop duration in yearly fraction
+    duration_factor = crop_calendar[c]["months"] / 12.0
 
-    # distribuzione semplificata
-    weights = np.array(list(phen.values()))
-    weights = weights / weights.sum()
+    # phenology-driven monthly uptake shape
+    crop_profile = build_crop_month_profile(c, crop_calendar, U_m)
 
-    N_crop_profile[:duration_months] += N_min * weights[:duration_months]
+    # scale by occupancy of rotation
+    crop_profile = crop_profile * duration_factor
 
-N_crop = N_crop_profile.sum() / years
+    # contribution to soil N mineralisation pool
+    N_total_profile += N_min * crop_profile
+
+
+# -------------------------
+# ROTATION NORMALISATION
+# -------------------------
+
+# total annual N crop uptake
+N_crop = N_total_profile.sum()
+
+# average per rotation year
+N_crop = N_crop / year
 
 V_N = N_crop * P_N
 V_P = P_avail * P_P
