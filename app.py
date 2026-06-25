@@ -386,20 +386,56 @@ V_water = V_PAW + V_INF
 # STRUCTURE MODULE
 # =========================
 
-Delta_BD = -lambda_bd[texture] * delta_SOC
+# =========================
+# STRUCTURE MODULE (UPDATED)
+# =========================
 
+# 1. Bulk density change driven by SOM
+Delta_BD = -lambda_bd[texture] * delta_SOC
 BD_new = BD_ref + Delta_BD
 
+# 2. Structural index (dimensionless)
 S_struct = BD_ref / BD_new
 
+# 3. Soil moisture proxy (ERA5-derived water balance)
+theta_soil = (df["precipitation_mm"].mean() - df["potential_evaporation_mm"].mean())
+theta_soil = theta_soil / 100  # normalization (dimensionless proxy)
+
+# 4. Plasticity threshold (texture dependent)
 PT_value = PT[texture]
 
-W_index = S_struct / (1 + np.exp(BD_ref - PT_value))
+# 5. Daily workability index (core equation from your text)
+W_index = S_struct / (1 + np.exp(theta_soil - PT_value))
 
-W_days = max(delta_SOC * 10, 0)
+# 6. Workability threshold (agronomic constraint)
+tau = 0.5
 
-H_saved = W_days * 0.5
-F_saved = W_days * 0.2
+# 7. Convert to workable days using climate series (ERA5 proxy)
+df["theta_day"] = df["precipitation_mm"] - df["potential_evaporation_mm"]
+
+df["workable"] = (
+    S_struct / (1 + np.exp(df["theta_day"] / 100 - PT_value))
+) > tau
+
+W_days = df["workable"].sum() / df["date"].dt.year.nunique()
+
+# 8. baseline comparison (no SOM improvement)
+BD_base = BD_ref
+S_base = 1.0
+
+df["workable_base"] = (
+    S_base / (1 + np.exp(df["theta_day"] / 100 - PT_value))
+) > tau
+
+W_days_base = df["workable_base"].sum() / df["date"].dt.year.nunique()
+
+# 9. improvement
+Delta_W_days = W_days - W_days_base
+Delta_W_days = max(Delta_W_days, 0)
+
+# 10. operational translation
+H_saved = Delta_W_days * 0.5   # hours/day/ha
+F_saved = Delta_W_days * 0.2   # L/day/ha
 
 V_structure = (H_saved * C_machinery) + (F_saved * P_diesel)
 
