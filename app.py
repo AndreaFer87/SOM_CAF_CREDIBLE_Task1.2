@@ -147,16 +147,16 @@ S_avail = SOM_functional * S_C * eta_S[texture]* 0.3 * 100000 * BD_ref * f_labil
 # =========================
 
 crop_calendar = {
-    "winter cereals": {"months": 10, "intensity": 0.85},
-    "maize": {"months": 5, "intensity": 0.65},
+    "winter cereals": {"months": 10, "intensity": 0.4},
+    "maize": {"months": 5, "intensity": 0.85},
     "soybean": {"months": 5, "intensity": 0.60},
     "tomato": {"months": 6, "intensity": 0.75}
 }
 
 # phenology weights (fraction of N demand over season)
 U_m = {
-    "establishment": 0.2,
-    "vegetative_peak": 1.2,
+    "establishment": 0.4,
+    "vegetative_peak": 1.4,
     "reproductive": 0.8,
     "senescence": 0.1
 }
