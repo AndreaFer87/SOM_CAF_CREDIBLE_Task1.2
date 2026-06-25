@@ -251,17 +251,12 @@ Delta_PAW = Delta_PAW_surface * root_access_factor
 # WATER MODULE (ERA5-BASED)
 # =========================
 
-import pandas as pd
-import numpy as np
 from pathlib import Path
+import pandas as pd
 
-# -------------------------
-# LOAD ERA5 DATA (GITHUB / REPO SAFE)
-# -------------------------
+DATA_PATH = Path(__file__).parent / "data" / "era5_processed_daily_data_id_crp_103.csv"
 
-DATA_PATH = Path(__file__).parent "era5_processed_daily_data_id_crp_103.csv"
 df = pd.read_csv(DATA_PATH)
-
 df["date"] = pd.to_datetime(df["date"])
 
 # -------------------------
