@@ -110,6 +110,20 @@ N_min = SOM_functional * (1/10) * k_minN(climate, texture)
 P_avail = SOM_functional * P_C * eta_P[texture]
 S_avail = SOM_functional * S_C * eta_S[texture]
 
+
+U_m = {
+    "establishment": 0.2,
+    "vegetative_peak": 1.0,
+    "reproductive": 0.6,
+    "senescence": 0.1
+}
+
+f_crop = {
+    "winter cereals": ["establishment","vegetative_peak","reproductive","senescence"],
+    "maize": ["establishment","vegetative_peak","reproductive","senescence"],
+    "soybean": ["establishment","vegetative_peak","reproductive","senescence"]
+}
+
 N_crop = 0
 
 for c in crops:
