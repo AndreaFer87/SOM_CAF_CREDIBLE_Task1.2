@@ -181,7 +181,6 @@ U_m = {
     }
 }
 
-U_m_total = sum(U_m.values())
 
 # crop phenology structure (NOT overwritten anymore)
 crop_phenology = {
