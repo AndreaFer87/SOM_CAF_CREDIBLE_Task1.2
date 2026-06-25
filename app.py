@@ -102,11 +102,25 @@ PT = {"sand":0.2, "loam":0.3, "clay loam":0.4, "clay":0.45}
 # NUTRIENT MODULE
 # =========================
 
-SOM_functional = SOC * k_SOM_map
+texture = get_usda_texture(sand, clay)
+
+climate = st.sidebar.selectbox(
+    "Climate",
+    ["cold", "temperate", "warm"],
+    index=1
+)
+
+crops = st.sidebar.multiselect(
+    "Crops",
+    ["winter cereals", "maize", "soybean"],
+    default=["winter cereals"]
+)
+
+SOM_functional = SOC * k_SOM_map[texture]
 
 C_N = 10
 
-N_min = SOM_functional * (1/10) * k_minN(climate, texture)
+N_min = SOM_functional * (1/C_N) * k_minN(climate, texture)
 P_avail = SOM_functional * P_C * eta_P[texture]
 S_avail = SOM_functional * S_C * eta_S[texture]
 
@@ -147,7 +161,7 @@ Delta_PAW_crit = Delta_PAW * f_crit
 
 I_new = I0 * (1 + theta_infiltration[texture] * delta_SOC)
 
-Delta_INF = (I_new - I0) * 50  # proxy aggregation
+Delta_INF = max((I_new - I0) * 50, 0)
 
 V_PAW = Delta_PAW_crit * P_water
 V_INF = Delta_INF * P_flood
@@ -168,7 +182,7 @@ PT_value = PT[texture]
 
 W_index = S_struct / (1 + np.exp(BD_ref - PT_value))
 
-W_days = Delta_SOC_days = delta_SOC * 10
+W_days = max(delta_SOC * 10, 0)
 
 H_saved = W_days * 0.5
 F_saved = W_days * 0.2
