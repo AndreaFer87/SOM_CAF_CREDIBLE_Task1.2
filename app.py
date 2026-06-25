@@ -130,7 +130,7 @@ SOM_functional = delta_SOC/10/10/BD_ref/0.3 * k_SOM_map[texture]
 
 C_N = 10
 
-N_min = SOM_functional * f_labile["N"] * k_minN(climate, texture) * 0.3 * 100000 * BD_ref
+N_min = SOM_functional * k_minN(climate, texture) * 0.3 * 100000 * BD_ref
 P_avail = SOM_functional * P_C * eta_P[texture]* 0.3 * 100000 * BD_ref * f_labile["P"]
 S_avail = SOM_functional * S_C * eta_S[texture]* 0.3 * 100000 * BD_ref * f_labile["S"]
 
