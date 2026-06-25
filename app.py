@@ -102,7 +102,7 @@ PT = {"sand":0.2, "loam":0.3, "clay loam":0.4, "clay":0.45}
 # NUTRIENT MODULE
 # =========================
 
-SOM_functional = SOC * k_SOM_map[texture]
+SOM_functional = SOC * k_SOM_map
 
 C_N = 10
 
