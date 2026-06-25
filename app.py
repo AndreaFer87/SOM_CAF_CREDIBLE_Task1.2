@@ -148,8 +148,8 @@ S_avail = SOM_functional * S_C * eta_S[texture]* 0.3 * 100000 * BD_ref * f_labil
 
 crop_calendar = {
     "winter cereals": {"months": 10, "intensity": 0.7},
-    "maize": {"months": 5, "intensity":1},
-    "soybean": {"months": 5, "intensity": 0.20},
+    "maize": {"months": 5, "intensity":0.9},
+    "soybean": {"months": 5, "intensity": 0.30},
     "tomato": {"months": 6, "intensity": 0.9}
 }
 
@@ -192,7 +192,7 @@ for c in crops:
     N_crop_total += N_crop_c
 
 # normalize per rotation cycle length (years)
-N_crop = N_crop_total / years
+N_crop = N_crop_total / len(crops)
 
 if len(crops) == 0:
     st.warning("Select at least one crop")
