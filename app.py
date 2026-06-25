@@ -1,6 +1,12 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
+import pandas as pd
+BASE_DIR = Path(__file__).resolve().parent
+DATA_PATH = BASE_DIR / "data" / "era5_processed_daily_data.csv"
+
+df = pd.read_csv(DATA_PATH)
 
 st.set_page_config(layout="wide")
 st.title("🌱 VSoM – Soil Organic Matter Value Framework")
@@ -250,7 +256,7 @@ Delta_PAW = Delta_PAW_surface * root_access_factor
 use_climate = st.sidebar.checkbox("Use ERA5 climate f_crit", value=True)
 
 if use_climate:
-    df = pd.read_csv("/mnt/data/era5_processed_daily_data_id_crp_103[209300].csv")
+    df = pd.read_csv("/mnt/data/era5_processed_daily_data_id_crp_103.csv")
     f_crit = compute_f_crit(df)
     st.sidebar.metric("f_crit (ERA5)", round(f_crit, 3))
 else:
