@@ -18,7 +18,6 @@ sand = st.sidebar.number_input("% Sand", 0, 100, 40)
 clay = st.sidebar.number_input("% Clay", 0, 100, 20)
 silt = 100 - sand - clay
 
-
 BD_ref = st.sidebar.number_input("Bulk density (g/cm3)", value=1.3)
 
 z_eff = st.sidebar.number_input("Effective rooting depth (cm)", value=30)
@@ -197,19 +196,21 @@ N_crop_total = 0
 
 for c in crops:
 
-    duration = crop_calendar[c]["months"]/12 * crop_calendar[c]["intensity"]
-
-    phenology = U_m[c]
-
-    phenology_factor = sum(phenology.values())  # = 1 ma lo lasci per estensioni
+    duration = (crop_calendar[c]["months"] / 12) * crop_calendar[c]["intensity"]
 
     demand_factor = crop_N_demand_factor[c]
 
-    N_crop_c = N_min * duration * demand_factor
+    phenology_factor = sum(U_m[c].values())  # = 1
+
+    # efficienza di intercettazione (NUOVA CHIAVE)
+    uptake_efficiency = 0.6  # puoi anche renderlo texture/climate dependent
+
+    N_crop_c = N_min * demand_factor * duration * uptake_efficiency
 
     N_crop_total += N_crop_c
 
-N_crop = N_crop_total / years
+# MEDIA CORRETTA
+N_crop = N_crop_total / len(crops)
 
 
 V_N = N_crop * P_N
