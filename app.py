@@ -201,8 +201,6 @@ if len(crops) == 0:
 rotation_length = years
 cycles = rotation_length / len(crops)
 
-N_crop = N_crop_total / rotation_length
-
 
 V_N = N_crop * P_N
 V_P = P_avail * P_P
