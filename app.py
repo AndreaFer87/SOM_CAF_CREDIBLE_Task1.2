@@ -240,7 +240,7 @@ for c in crops:
 N_crop = N_total_profile.sum()
 
 # average per rotation year
-N_crop = N_crop / year
+N_crop = N_crop / years
 
 V_N = N_crop * P_N
 V_P = P_avail * P_P
