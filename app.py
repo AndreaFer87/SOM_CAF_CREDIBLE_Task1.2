@@ -259,7 +259,7 @@ from pathlib import Path
 # LOAD ERA5 DATA (GITHUB / REPO SAFE)
 # -------------------------
 
-DATA_PATH = Path(__file__).parent / "data" / "era5_processed_daily_data_id_crp_103.csv"
+DATA_PATH = Path(__file__).parent "era5_processed_daily_data_id_crp_103.csv"
 df = pd.read_csv(DATA_PATH)
 
 df["date"] = pd.to_datetime(df["date"])
