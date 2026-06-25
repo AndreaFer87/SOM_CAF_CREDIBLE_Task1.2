@@ -14,10 +14,10 @@ st.sidebar.header("Soil Inputs")
 SOC = st.sidebar.number_input("SOC stock (t C/ha)", value=60.0)
 delta_SOC = st.sidebar.number_input("ΔSOC (t C/ha/yr)", value=0.4)
 
-texture = st.sidebar.selectbox(
-    "Texture",
-    ["sand", "loam", "clay loam", "clay"]
-)
+sand = st.sidebar.number_input("% Sand", 0, 100, 40)
+clay = st.sidebar.number_input("% Clay", 0, 100, 20)
+silt = 100 - sand - clay
+
 
 BD_ref = st.sidebar.number_input("Bulk density (g/cm3)", value=1.3)
 
@@ -45,9 +45,50 @@ P_diesel = st.sidebar.number_input("Diesel price €/L", value=1.7)
 # TEXTURE PARAMETERS
 # =========================
 
-k_SOM = {"sand":0.8, "loam":1.0, "clay loam":1.2, "clay":1.3}
+def get_usda_texture(sand, clay):
 
-k_minN = {"sand":0.8, "loam":1.0, "clay loam":1.1, "clay":1.2}
+    if sand > 85 and clay < 10:
+        return "sand"
+    elif clay > 40:
+        return "clay"
+    elif sand > 43 and clay < 20:
+        return "loam"
+    else:
+        return "clay loam"
+
+k_SOM_map = { "sand": 1.2, "loam": 1.6, "clay loam": 2.0,"clay": 2.3 }
+
+def k_minN(climate, texture):
+
+    base = { "cold": 0.04, "temperate": 0.07, "warm": 0.12
+    }[climate]
+
+    texture_factor = {
+        "sand": 1.2,
+        "loam": 1.0,
+        "clay loam": 0.9,
+        "clay": 0.8
+    }[texture]
+
+    return base * texture_factor
+
+
+eta_P = {
+    "sand": 0.4,
+    "loam": 0.6,
+    "clay loam": 0.75,
+    "clay": 0.85
+}
+
+eta_S = {
+    "sand": 0.5,
+    "loam": 0.7,
+    "clay loam": 0.8,
+    "clay": 0.9
+}
+
+P_C = 0.003   # mid of 0.001–0.005
+S_C = 0.0012  # mid of 0.0005–0.002
 
 alpha = {"sand":1.2, "loam":2.0, "clay loam":2.5, "clay":3.0}
 
@@ -61,15 +102,23 @@ PT = {"sand":0.2, "loam":0.3, "clay loam":0.4, "clay":0.45}
 # NUTRIENT MODULE
 # =========================
 
-SOM_functional = SOC * k_SOM[texture]
+SOM_functional = SOC * k_SOM_map[texture]
 
 C_N = 10
 
-N_min = SOM_functional * (1/C_N) * k_minN[texture]
-P_avail = SOM_functional * 0.01
-S_avail = SOM_functional * 0.005
+N_min = SOM_functional * (1/10) * k_minN(climate, texture)
+P_avail = SOM_functional * P_C * eta_P[texture]
+S_avail = SOM_functional * S_C * eta_S[texture]
 
-V_N = N_min * P_N
+N_crop = 0
+
+for c in crops:
+    stages = f_crop.get(c, [])
+    for s in stages:
+        N_crop += N_min * U_m[s]
+
+
+V_N = N_crop * P_N
 V_P = P_avail * P_P
 V_S = S_avail * P_S
 
