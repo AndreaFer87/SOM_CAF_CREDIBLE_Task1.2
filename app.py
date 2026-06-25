@@ -191,8 +191,7 @@ for c in crops:
 
     N_crop_total += N_crop_c
 
-# normalize per rotation cycle length (years)
-N_crop = N_crop_total / len(crops)
+
 
 if len(crops) == 0:
     st.warning("Select at least one crop")
@@ -200,6 +199,8 @@ if len(crops) == 0:
 
 rotation_length = years
 cycles = rotation_length / len(crops)
+
+N_crop = N_crop_total / years
 
 
 V_N = N_crop * P_N
@@ -278,12 +279,13 @@ st.success(f"💰 TOTAL VSoM = {round(V_SOM,2)} €/ha/year")
 
 st.subheader("🌱 Nutrient Mineralisation Summary (Rotation average)")
 
-colA, colB, colC, colD = st.columns(4)
+colA, colB, colC, colD,colE  = st.columns(5)
 
-colA.metric("N mineralised (kg/ha/yr)", round(N_crop, 2))
-colB.metric("P available (kg/ha/yr)", round(P_avail, 2))
-colC.metric("S available (kg/ha/yr)", round(S_avail, 2))
-colD.metric("Total nutrient value (€)", round(V_nutrients, 2))
+colA.metric("N mine (kg/ha/yr)", round(N_min, 2))
+colB.metric("N crop (kg/ha/yr)", round(N_crop, 2))
+colC.metric("P available (kg/ha/yr)", round(P_avail, 2))
+colD.metric("S available (kg/ha/yr)", round(S_avail, 2))
+colE.metric("Total nutrient value (€)", round(V_nutrients, 2))
 
 # breakdown
 total_n = N_crop + P_avail + S_avail
