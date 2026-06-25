@@ -84,6 +84,11 @@ def k_minN(climate, texture):
 
     return base * texture_factor
 
+f_labile = {
+    "N": 0.03,   # 2–5% SOM active N pool
+    "P": 0.005,  # 0.2–1%
+    "S": 0.01
+}
 
 eta_P = {
     "sand": 0.4,
@@ -132,9 +137,9 @@ SOM_functional = SOC/10/10/BD_ref/0.3 * k_SOM_map[texture]
 
 C_N = 10
 
-N_min = SOM_functional * (1/C_N) * k_minN(climate, texture) * 0.3 * 100000 * BD_ref
-P_avail = SOM_functional * P_C * eta_P[texture]* 0.3 * 100000 * BD_ref
-S_avail = SOM_functional * S_C * eta_S[texture]* 0.3 * 100000 * BD_ref
+N_min = SOM_functional * (1/C_N) * f_labile["N"] * k_minN(climate, texture) * 0.3 * 100000 * BD_ref
+P_avail = SOM_functional * P_C * eta_P[texture]* 0.3 * 100000 * BD_ref * f_labile["P"]
+S_avail = SOM_functional * S_C * eta_S[texture]* 0.3 * 100000 * BD_ref * f_labile["S"]
 
 
 # =========================
