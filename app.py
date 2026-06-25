@@ -181,14 +181,13 @@ U_m = {
     }
 }
 
-
-# crop phenology structure (NOT overwritten anymore)
-crop_phenology = {
-    "winter cereals": ["establishment","vegetative_peak","reproductive","senescence"],
-    "maize": ["establishment","vegetative_peak","reproductive","senescence"],
-    "soybean": ["establishment","vegetative_peak","reproductive","senescence"],
-    "tomato": ["establishment","vegetative_peak","reproductive","senescence"]
+crop_N_demand_factor = {
+    "winter cereals": 1.0,
+    "maize": 1.4,
+    "soybean": 0.6,
+    "tomato": 1.6
 }
+
 
 # =========================
 # N CROP CALCULATION
@@ -198,26 +197,17 @@ N_crop_total = 0
 
 for c in crops:
 
-    stages = crop_phenology[c]
+    duration = crop_calendar[c]["months"]/12 * crop_calendar[c]["intensity"]
 
-    duration = (crop_calendar[c]["months"] / 12) * crop_calendar[c]["intensity"]
+    phenology = U_m[c]
 
-    stage_sum = sum(U_m[c][s] for s in stages)
+    phenology_factor = sum(phenology.values())  # = 1 ma lo lasci per estensioni
 
-    f_crop = stage_sum / U_m_total
+    demand_factor = crop_N_demand_factor[c]
 
-    N_crop_c = N_min * f_crop * duration
+    N_crop_c = N_min * duration * demand_factor
 
     N_crop_total += N_crop_c
-
-
-
-if len(crops) == 0:
-    st.warning("Select at least one crop")
-    st.stop()
-
-rotation_length = years
-cycles = rotation_length / len(crops)
 
 N_crop = N_crop_total / years
 
