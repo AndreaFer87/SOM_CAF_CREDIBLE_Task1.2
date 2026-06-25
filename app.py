@@ -156,8 +156,8 @@ crop_calendar = {
 # phenology weights (fraction of N demand over season)
 U_m = {
     "establishment": 0.2,
-    "vegetative_peak": 1.0,
-    "reproductive": 0.6,
+    "vegetative_peak": 1.2,
+    "reproductive": 0.8,
     "senescence": 0.1
 }
 
