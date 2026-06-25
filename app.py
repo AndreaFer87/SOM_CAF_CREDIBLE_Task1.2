@@ -36,8 +36,6 @@ years = st.sidebar.slider(
 
 st.sidebar.header("Climate / Water")
 
-f_crit = st.sidebar.slider("f_crit (0-1)", 0.0, 1.0, 0.6)
-
 I0 = st.sidebar.number_input("I0 infiltration capacity", value=10.0)
 
 st.sidebar.header("Economic parameters")
@@ -247,6 +245,37 @@ Delta_PAW_surface = alpha[texture] * delta_SOC_percent
 root_access_factor = 1 - np.exp(-z_eff / 15)
 
 Delta_PAW = Delta_PAW_surface * root_access_factor
+
+df["DEF"] = (df["potential_evaporation_mm"] - df["precipitation_mm"]).clip(lower=0)
+df["date"] = pd.to_datetime(df["date"])
+df["month"] = df["date"].dt.to_period("M")
+
+monthly = df.groupby("month")[["DEF"]].sum().reset_index()
+def compute_f_crit(df):
+    df = df.copy()
+    df["date"] = pd.to_datetime(df["date"])
+    df["month"] = df["date"].dt.to_period("M")
+
+    monthly = df.groupby("month").agg({
+        "potential_evaporation_mm": "sum",
+        "precipitation_mm": "sum"
+    })
+
+    monthly["DEF"] = (monthly["potential_evaporation_mm"] - monthly["precipitation_mm"]).clip(lower=0)
+
+    f_crit = monthly["DEF"].sum() / (monthly["potential_evaporation_mm"].sum() + 1e-9)
+
+    return f_crit
+
+use_climate = st.sidebar.checkbox("Use ERA5 climate f_crit", value=True)
+
+if use_climate:
+    df = pd.read_csv("/mnt/data/era5_processed_daily_data_id_crp_103[209300].csv")
+    f_crit = compute_f_crit(df)
+    st.sidebar.metric("f_crit (ERA5)", round(f_crit, 3))
+else:
+    f_crit = st.sidebar.slider("f_crit (scenario)", 0.0, 1.0, 0.6)
+
     
 Delta_PAW_crit = Delta_PAW * f_crit
 
