@@ -191,8 +191,17 @@ for c in crops:
 
     N_crop_total += N_crop_c
 
-# rotation average
+# normalize per rotation cycle length (years)
 N_crop = N_crop_total / years
+
+if len(crops) == 0:
+    st.warning("Select at least one crop")
+    st.stop()
+
+rotation_length = years
+cycles = rotation_length / len(crops)
+
+N_crop = N_crop_total / rotation_length
 
 
 V_N = N_crop * P_N
@@ -287,6 +296,16 @@ if total_n > 0:
     st.write(f"P: {P_avail/total_n:.1%}")
     st.write(f"S: {S_avail/total_n:.1%}")
 
+
+
+st.subheader("📊 Crop phenology contribution")
+
+for c in crops:
+    duration = (crop_calendar[c]["months"] / 12) * crop_calendar[c]["intensity"]
+    stage_sum = sum([U_m[s] for s in crop_phenology[c]])
+    f_crop = stage_sum / U_m_total
+
+    st.write(f"{c}: f_crop={round(f_crop,2)}, duration={round(duration,2)}")
 # =========================
 # PLOT BREAKDOWN
 # =========================
