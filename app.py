@@ -248,7 +248,6 @@ root_access_factor = 1 - np.exp(-z_eff / 15)
 
 Delta_PAW = Delta_PAW_surface * root_access_factor
     
-Delta_PAW = alpha[texture] * depth_response(z_eff) * delta_SOC_percent
 Delta_PAW_crit = Delta_PAW * f_crit
 
 I_new = I0 * (1 + theta_infiltration[texture] * delta_SOC)
