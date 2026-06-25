@@ -2,8 +2,6 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
-import pandas as pd
-
 
 st.set_page_config(layout="wide")
 st.title("🌱 VSoM – Soil Organic Matter Value Framework")
@@ -249,38 +247,50 @@ root_access_factor = 1 - np.exp(-z_eff / 15)
 
 Delta_PAW = Delta_PAW_surface * root_access_factor
 
+# =========================
+# WATER MODULE (ERA5-BASED)
+# =========================
 
-use_climate = st.sidebar.checkbox("Use ERA5 climate f_crit", value=True)
+import pandas as pd
+import numpy as np
+from pathlib import Path
 
-if use_climate:
-    df = pd.read_csv("/mnt/data/era5_processed_daily_data_id_crp_103.csv")
-    f_crit = compute_f_crit(df)
-    st.sidebar.metric("f_crit (ERA5)", round(f_crit, 3))
-else:
-    f_crit = st.sidebar.slider("f_crit (scenario)", 0.0, 1.0, 0.6)
-    
-df["DEF"] = (df["potential_evaporation_mm"] - df["precipitation_mm"]).clip(lower=0)
+# -------------------------
+# LOAD ERA5 DATA (GITHUB / REPO SAFE)
+# -------------------------
+
+DATA_PATH = Path(__file__).parent / "data" / "era5_processed_daily_data_id_crp_103.csv"
+df = pd.read_csv(DATA_PATH)
+
 df["date"] = pd.to_datetime(df["date"])
+
+# -------------------------
+# AGGREGATION MONTHLY
+# -------------------------
+
 df["month"] = df["date"].dt.to_period("M")
 
-monthly = df.groupby("month")[["DEF"]].sum().reset_index()
-def compute_f_crit(df):
-    df = df.copy()
-    df["date"] = pd.to_datetime(df["date"])
-    df["month"] = df["date"].dt.to_period("M")
+monthly = df.groupby("month").agg({
+    "potential_evaporation_mm": "sum",
+    "precipitation_mm": "sum"
+}).reset_index()
 
-    monthly = df.groupby("month").agg({
-        "potential_evaporation_mm": "sum",
-        "precipitation_mm": "sum"
-    })
+monthly["DEF"] = (monthly["potential_evaporation_mm"] - monthly["precipitation_mm"]).clip(lower=0)
 
-    monthly["DEF"] = (monthly["potential_evaporation_mm"] - monthly["precipitation_mm"]).clip(lower=0)
+# -------------------------
+# f_crit (CLIMATE STRESS INDEX)
+# -------------------------
 
-    f_crit = monthly["DEF"].sum() / (monthly["potential_evaporation_mm"].sum() + 1e-9)
+def compute_f_crit(monthly_df):
+    et0 = monthly_df["potential_evaporation_mm"].sum()
+    deficit = monthly_df["DEF"].sum()
 
-    return f_crit
+    return deficit / (et0 + 1e-9)
+
+f_crit = compute_f_crit(monthly)
 
 
+# crop stress relevance weighting
 Delta_PAW_crit = Delta_PAW * f_crit
 
 I_new = I0 * (1 + theta_infiltration[texture] * delta_SOC)
