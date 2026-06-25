@@ -126,12 +126,6 @@ climate = st.sidebar.selectbox(
     index=1
 )
 
-crops = st.sidebar.multiselect(
-    "Crops",
-    ["winter cereals", "maize", "soybean"],
-    default=["winter cereals"]
-)
-
 SOM_functional = delta_SOC/10/10/BD_ref/0.3 * k_SOM_map[texture] 
 
 C_N = 10
