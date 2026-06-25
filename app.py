@@ -132,7 +132,7 @@ crops = st.sidebar.multiselect(
     default=["winter cereals"]
 )
 
-SOM_functional = SOC/10/10/BD_ref/0.3 * k_SOM_map[texture] 
+SOM_functional = delta_SOC/10/10/BD_ref/0.3 * k_SOM_map[texture] 
 
 C_N = 10
 
@@ -151,6 +151,10 @@ crop_calendar = {
     "soybean": {"months": 5},
     "tomato": {"months": 6}
 }
+
+# ONLY allowed crops come from calendar
+available_crops = list(crop_calendar.keys())
+
 
 U_m = {
     "winter cereals": {
@@ -180,57 +184,55 @@ U_m = {
 }
 
 # =========================
-# N CROP MODULE (CORRECT STRUCTURE)
+# N CROP MODULE (SEQUENTIAL ROTATION FIX)
 # =========================
 
 import numpy as np
 
 n_months = 12
 
-# 1. distribuzione base del N mineralizzato nel tempo (uniforme o stagionale semplificata)
 N_monthly_base = np.ones(n_months) * (N_min / n_months)
 
-# 2. accumulatore rotazione
 N_total_profile = np.zeros(n_months)
+
+t_cursor = 0  # <-- chiave: posizione nella rotazione
 
 for c in crops:
 
-    months = crop_calendar[c]["months"]
+    crop_months = int(round(crop_calendar[c]["months"]))
     intensity = crop_calendar[c].get("intensity", 1.0)
 
-    # mesi occupati dalla coltura nella rotazione
-    active_months = int(round(months))
-
-    # distribuzione fenologica crop-specifica
     phen = U_m[c]
     phen_weights = np.array(list(phen.values()), dtype=float)
     phen_weights = phen_weights / phen_weights.sum()
 
     crop_profile = np.zeros(n_months)
 
-    for m in range(active_months):
+    # distribuzione SOLO nel blocco temporale assegnato
+    for i in range(crop_months):
 
-        # mappa mese → fase fenologica
-        phase_idx = int(m / active_months * len(phen_weights))
+        global_month = (t_cursor + i) % n_months
+
+        phase_idx = int(i / crop_months * len(phen_weights))
         phase_idx = min(phase_idx, len(phen_weights) - 1)
 
-        crop_profile[m] = phen_weights[phase_idx]
+        crop_profile[global_month] += phen_weights[phase_idx]
 
-    # normalizza sul periodo colturale
-    crop_profile = crop_profile / crop_profile.sum()
+    # normalizzazione interna coltura
+    if crop_profile.sum() > 0:
+        crop_profile /= crop_profile.sum()
 
-    # scala per durata e intensità
-    crop_profile = crop_profile * (months / 12.0) * intensity
+    # scaling temporale reale
+    crop_profile *= (crop_months / 12.0) * intensity
 
-    # applica N mineralizzato disponibile
+    # accumulo su asse temporale
     N_total_profile += N_monthly_base * crop_profile
 
-# 3. somma annuale
-N_crop = N_total_profile.sum()
+    # avanzamento rotazione (FONDAMENTALE)
+    t_cursor += crop_months
 
-# 4. normalizzazione corretta per anni di rotazione
-N_crop = N_crop / years
-
+# chiusura ciclo
+N_crop = N_total_profile.sum() / years
 
 V_N = N_crop * P_N
 V_P = P_avail * P_P
