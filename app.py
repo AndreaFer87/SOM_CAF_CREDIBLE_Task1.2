@@ -31,8 +31,8 @@ I0 = st.sidebar.number_input("I0 infiltration capacity", value=10.0)
 
 st.sidebar.header("Economic parameters")
 
-P_N = st.sidebar.number_input("Price N (€/kg)", value=1.2)
-P_P = st.sidebar.number_input("Price P2O5 (€/kg)", value=2.5)
+P_N = st.sidebar.number_input("Price N (€/kg)", value=0.54)
+P_P = st.sidebar.number_input("Price P2O5 (€/kg)", value=0.74)
 P_S = st.sidebar.number_input("Price SO3 (€/kg)", value=1.0)
 
 P_water = st.sidebar.number_input("Water value (€/mm)", value=0.15)
@@ -121,8 +121,8 @@ SOM_functional = SOC/10/10/BD_ref/0.3 * k_SOM_map[texture]
 C_N = 10
 
 N_min = SOM_functional * (1/C_N) * k_minN(climate, texture) * 0.3 * 100000 * BD_ref
-P_avail = SOM_functional * P_C * eta_P[texture]
-S_avail = SOM_functional * S_C * eta_S[texture]
+P_avail = SOM_functional * P_C * eta_P[texture]* 0.3 * 100000 * BD_ref
+S_avail = SOM_functional * S_C * eta_S[texture]* 0.3 * 100000 * BD_ref
 
 
 U_m = {
