@@ -246,6 +246,16 @@ root_access_factor = 1 - np.exp(-z_eff / 15)
 
 Delta_PAW = Delta_PAW_surface * root_access_factor
 
+
+use_climate = st.sidebar.checkbox("Use ERA5 climate f_crit", value=True)
+
+if use_climate:
+    df = pd.read_csv("/mnt/data/era5_processed_daily_data_id_crp_103[209300].csv")
+    f_crit = compute_f_crit(df)
+    st.sidebar.metric("f_crit (ERA5)", round(f_crit, 3))
+else:
+    f_crit = st.sidebar.slider("f_crit (scenario)", 0.0, 1.0, 0.6)
+    
 df["DEF"] = (df["potential_evaporation_mm"] - df["precipitation_mm"]).clip(lower=0)
 df["date"] = pd.to_datetime(df["date"])
 df["month"] = df["date"].dt.to_period("M")
@@ -267,16 +277,7 @@ def compute_f_crit(df):
 
     return f_crit
 
-use_climate = st.sidebar.checkbox("Use ERA5 climate f_crit", value=True)
 
-if use_climate:
-    df = pd.read_csv("/mnt/data/era5_processed_daily_data_id_crp_103[209300].csv")
-    f_crit = compute_f_crit(df)
-    st.sidebar.metric("f_crit (ERA5)", round(f_crit, 3))
-else:
-    f_crit = st.sidebar.slider("f_crit (scenario)", 0.0, 1.0, 0.6)
-
-    
 Delta_PAW_crit = Delta_PAW * f_crit
 
 I_new = I0 * (1 + theta_infiltration[texture] * delta_SOC)
