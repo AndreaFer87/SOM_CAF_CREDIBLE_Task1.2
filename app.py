@@ -60,7 +60,7 @@ k_SOM_map = { "sand": 1.2, "loam": 1.6, "clay loam": 2.0,"clay": 2.3 }
 
 def k_minN(climate, texture):
 
-    base = { "cold": 0.04, "temperate": 0.07, "warm": 0.12
+    base = { "cold": 0.001, "temperate": 0.004, "warm": 0.012
     }[climate]
 
     texture_factor = {
@@ -116,11 +116,11 @@ crops = st.sidebar.multiselect(
     default=["winter cereals"]
 )
 
-SOM_functional = SOC/10/10/BD_ref/0.3 * k_SOM_map[texture]
+SOM_functional = SOC/10/10/BD_ref/0.3 * k_SOM_map[texture] 
 
 C_N = 10
 
-N_min = SOM_functional * (1/C_N) * k_minN(climate, texture)
+N_min = SOM_functional * (1/C_N) * k_minN(climate, texture) * 0.3 * 100000 * BDref
 P_avail = SOM_functional * P_C * eta_P[texture]
 S_avail = SOM_functional * S_C * eta_S[texture]
 
