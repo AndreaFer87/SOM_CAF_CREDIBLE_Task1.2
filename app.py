@@ -192,26 +192,16 @@ crop_N_demand_factor = {
 # N CROP CALCULATION
 # =========================
 
-N_crop_total = 0
+N_crop_total = 0 
 
-for c in crops:
-
-    duration = (crop_calendar[c]["months"] / 12) * crop_calendar[c]["intensity"]
-
-    demand_factor = crop_N_demand_factor[c]
-
-    phenology_factor = sum(U_m[c].values())  # = 1
-
-    # efficienza di intercettazione (NUOVA CHIAVE)
-    uptake_efficiency = 0.6  # puoi anche renderlo texture/climate dependent
-
-    N_crop_c = N_min * demand_factor * duration * uptake_efficiency
-
-    N_crop_total += N_crop_c
-
-# MEDIA CORRETTA
-N_crop = N_crop_total / len(crops)
-
+for c in crops: 
+    duration = crop_calendar[c]["months"]/12 * crop_calendar[c]["intensity"] 
+    phenology = U_m[c] 
+    phenology_factor = sum(phenology.values()) # = 1 ma lo lasci per estensioni 
+    demand_factor = crop_N_demand_factor[c] 
+    N_crop_c = N_min * duration * demand_factor 
+    N_crop_total += N_crop_c 
+    N_crop = N_crop_total / years
 
 V_N = N_crop * P_N
 V_P = P_avail * P_P
