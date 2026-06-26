@@ -492,20 +492,22 @@ F_harv = 8.0
 H_saved = (Delta_W_pre * H_pre) + (Delta_W_harv * H_harv)
 F_saved = (Delta_W_pre * F_pre) + (Delta_W_harv * F_harv)
 
+V_structure = (H_saved * C_machinery) + (F_saved * P_diesel)
 
 # =========================
 # 7. ECONOMIC VALUE
 # =========================
 
-V_structure = (H_saved * C_machinery) + (F_saved * P_diesel)
+
 
 st.subheader("💰 VSoM Total Breakdown")
 
-c1, c2, c3 = st.columns(3)
+c1, c2, c3, c4 = st.columns(4)
 
-c1.metric("🌱 Nutrients", f"{V_nutrients:.2f} €")
-c2.metric("💧 Water", f"{V_water:.2f} €")
-c3.metric("🧱 Structure", f"{V_structure:.2f} €")
+c1.metric("V Nutrients", f"{V_nutrients:.2f} €")
+c2.metric("V Water", f"{V_water:.2f} €")
+c3.metric("V Structure", f"{V_structure:.2f} €")
+c4.metric("SOM increase", f"{SOM_functional:.2f} % annual increase")
 
 st.metric("TOTAL VSoM", f"{(V_nutrients + V_water + V_structure):.2f} €/ha/yr")
 
@@ -515,7 +517,7 @@ st.subheader("🌱 Nutrients module")
 fig, ax = plt.subplots()
 
 ax.bar(
-    ["N", "P", "S"],
+    ["N min", "P avail", "S avail"],
     [N_crop, P_avail, S_avail]
 )
 
@@ -523,37 +525,27 @@ ax.set_ylabel("kg/ha/yr")
 
 st.pyplot(fig)
 
-st.write("N mineralisation:", round(N_min, 2))
+st.info("SOM-driven mineralization enhancement based on ΔSOC functional response")
+
 
 st.subheader("💧 Water module")
-
-Delta_runoff = Delta_INF * 0.3  # coerente con tuo modello
 
 fig, ax = plt.subplots()
 
 ax.bar(
-    ["ΔPAW", "ΔPAW_crit", "ΔINF", "ΔRunoff"],
-    [Delta_PAW, Delta_PAW_crit, Delta_INF, Delta_runoff]
+    ["ΔPAW", "ΔPAW crit", "ΔINF"],
+    [Delta_PAW, Delta_PAW_crit, Delta_INF]
 )
 
 ax.set_ylabel("mm/year")
 
-st.pyplot(fig)
-
-colw1, colw2 = st.columns(2)
-
-colw1.metric("Flood value", f"{(Delta_INF * P_flood):.2f} €")
-colw2.metric("Erosion value", f"{(Delta_runoff * P_erosion):.2f} €")
 
 st.subheader("🧱 Structure module")
-
-Delta_BD = float(Delta_BD)
-S_struct = float(S_struct)
 
 fig, ax = plt.subplots()
 
 ax.bar(
-    ["H_saved (€)", "F_saved (€)"],
+    ["H saved (€)", "F saved (€)"],
     [
         H_saved * C_machinery,
         F_saved * P_diesel
@@ -564,18 +556,13 @@ ax.set_ylabel("€/ha/year")
 
 st.pyplot(fig)
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 col1.metric("ΔBD", f"{Delta_BD:.3f}")
 col2.metric("S_struct", f"{S_struct:.3f}")
 col3.metric("W_days", f"{W_days:.1f}")
+col4.metric("Workability index", f"{workability_mean:.2f}")
 
-W_index_clean = np.nan_to_num(np.array(W_index_new), nan=0.0)
-
-workability_mean = float(np.mean(W_index_clean))
-workability_prob = float(np.mean(W_index_clean > tau))
-workability_days = float(np.sum(W_index_clean > tau) / df["date"].dt.year.nunique())
-
-st.write("Workability mean:", round(workability_mean, 3))
-st.write("Workability probability:", round(workability_prob, 3))
-st.write("Workable days/year:", round(workability_days, 1))
+st.write("Operational savings breakdown:")
+st.write(f"- Machinery hours saved: {H_saved:.2f} h/ha")
+st.write(f"- Diesel saved: {F_saved:.2f} L/ha")
