@@ -81,8 +81,8 @@ def k_minN(climate, texture):
 
 f_labile = {
     "N": 0.9,   #SOM active N pool
-    "P": 0.05,  #SOM active P pool
-    "S": 0.1 #SOM active S pool
+    "P": 0.25,  #SOM active P pool
+    "S": 0.20 #SOM active S pool
 }
 
 eta_P = {
