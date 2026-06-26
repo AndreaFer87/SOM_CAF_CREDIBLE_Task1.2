@@ -31,9 +31,16 @@ crops = st.sidebar.multiselect(
 
 years = st.sidebar.slider(
     "Rotation length (years)",
-    1, 10, 3
+    1, 10, 2
 )
 
+st.sidebar.header("Climate")
+
+climate = st.sidebar.selectbox(
+    "Climate",
+    ["cold", "temperate", "warm"],
+    index=3
+)
 
 st.sidebar.header("Economic parameters")
 
@@ -129,11 +136,6 @@ PT = {"sand":0.2, "loam":0.3, "clay loam":0.4, "clay":0.45}
 
 texture = get_usda_texture(sand, clay)
 
-climate = st.sidebar.selectbox(
-    "Climate",
-    ["cold", "temperate", "warm"],
-    index=1
-)
 
 SOM_functional = delta_SOC/10/10/BD_ref/0.3 * k_SOM_map[texture] 
 
