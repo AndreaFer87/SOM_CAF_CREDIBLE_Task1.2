@@ -34,9 +34,7 @@ years = st.sidebar.slider(
     1, 10, 2
 )
 
-st.sidebar.header("Climate")
-
-climate = st.sidebar.selectbox(
+Climate = st.sidebar.selectbox(
     "Climate",
     ["cold", "temperate", "warm"],
     index=3
