@@ -437,7 +437,8 @@ PT_value = PT[texture]
 
 W_index_base = 1.0 / (1 + np.exp(theta_norm - PT_value))
 W_index_new  = S_struct / (1 + np.exp(theta_norm - PT_value))
-W_index_clean = np.nan_to_num(W_index_new, nan=0.0)
+W_index_clean = np.nan_to_num(np.array(W_index_new), nan=0.0)
+W_index_clean = np.asarray(W_index_clean, dtype=float)
 
 
 tau = 0.5
@@ -498,79 +499,83 @@ F_saved = (Delta_W_pre * F_pre) + (Delta_W_harv * F_harv)
 
 V_structure = (H_saved * C_machinery) + (F_saved * P_diesel)
 
-# =========================
-# OUTPUT
-# =========================
+st.subheader("💰 VSoM Total Breakdown")
 
-col1, col2, col3 = st.columns(3)
+c1, c2, c3 = st.columns(3)
 
-col1.metric("🌱 Nutrients Value (€)", round(V_nutrients,2))
-col1.metric("N mineralisation", round(N_min,2))
-col1.metric("P availability", round(P_avail,2))
+c1.metric("🌱 Nutrients", f"{V_nutrients:.2f} €")
+c2.metric("💧 Water", f"{V_water:.2f} €")
+c3.metric("🧱 Structure", f"{V_structure:.2f} €")
 
-col2.metric("💧 Water Value (€)", round(V_water,2))
-col2.metric("ΔPAW (mm)", round(Delta_PAW,2))
-col2.metric("ΔINF proxy", round(Delta_INF,2))
-
-col3.metric("🧱 Structure Value (€)", round(V_structure,2))
-col3.metric("ΔBD", round(Delta_BD,3))
-
-workability_mean = float(np.nanmean(W_index_clean))
-workability_prob = float(np.mean(W_index_clean > tau))
-years = df["date"].dt.year.nunique()
-
-workability_days = float(np.sum(W_index_clean > tau) / years)
-
-col3.metric("Workability index (mean)", round(workability_mean, 3))
-col3.metric("Workability probability", round(workability_prob, 3))
-col3.metric("Workable days/year", round(workability_days, 1))
-
-st.success(f"💰 TOTAL VSoM = {round(V_SOM,2)} €/ha/year")
+st.metric("TOTAL VSoM", f"{(V_nutrients + V_water + V_structure):.2f} €/ha/yr")
 
 
-# =========================
-# NUTRIENT OUTPUT SUMMARY
-# =========================
-
-st.subheader("🌱 Nutrient Mineralisation Summary (Rotation average)")
-
-colA, colB, colC, colD,colE  = st.columns(5)
-
-colA.metric("N mine (kg/ha/yr)", round(N_min, 2))
-colB.metric("N crop (kg/ha/yr)", round(N_crop, 2))
-colC.metric("P available (kg/ha/yr)", round(P_avail, 2))
-colD.metric("S available (kg/ha/yr)", round(S_avail, 2))
-colE.metric("Total nutrient value (€)", round(V_nutrients, 2))
-
-# breakdown
-total_n = N_crop + P_avail + S_avail
-
-if total_n > 0:
-    st.write("### Nutrient contribution (%)")
-    st.write(f"N: {N_crop/total_n:.1%}")
-    st.write(f"P: {P_avail/total_n:.1%}")
-    st.write(f"S: {S_avail/total_n:.1%}")
-
-
-
-st.subheader("📊 Crop phenology contribution")
-
-for c in crops:
-    duration = (crop_calendar[c]["months"] / 12) * crop_calendar[c]["intensity"]
-    stage_sum = sum([U_m[s] for s in crop_phenology[c]])
-    f_crop = stage_sum / U_m_total
-
-    st.write(f"{c}: f_crop={round(f_crop,2)}, duration={round(duration,2)}")
-# =========================
-# PLOT BREAKDOWN
-# =========================
+st.subheader("🌱 Nutrients module")
 
 fig, ax = plt.subplots()
 
-labels = ["Nutrients", "Water", "Structure"]
-values = [V_nutrients, V_water, V_structure]
+ax.bar(
+    ["N", "P", "S"],
+    [N_crop, P_avail, S_avail]
+)
 
-ax.bar(labels, values)
+ax.set_ylabel("kg/ha/yr")
+
+st.pyplot(fig)
+
+st.write("N mineralisation:", round(N_min, 2))
+
+st.subheader("💧 Water module")
+
+Delta_runoff = Delta_INF * 0.3  # coerente con tuo modello
+
+fig, ax = plt.subplots()
+
+ax.bar(
+    ["ΔPAW", "ΔPAW_crit", "ΔINF", "ΔRunoff"],
+    [Delta_PAW, Delta_PAW_crit, Delta_INF, Delta_runoff]
+)
+
+ax.set_ylabel("mm/year")
+
+st.pyplot(fig)
+
+colw1, colw2 = st.columns(2)
+
+colw1.metric("Flood value", f"{(Delta_INF * P_flood):.2f} €")
+colw2.metric("Erosion value", f"{(Delta_runoff * P_erosion):.2f} €")
+
+st.subheader("🧱 Structure module")
+
+Delta_BD = float(Delta_BD)
+S_struct = float(S_struct)
+
+fig, ax = plt.subplots()
+
+ax.bar(
+    ["H_saved (€)", "F_saved (€)"],
+    [
+        H_saved * C_machinery,
+        F_saved * P_diesel
+    ]
+)
+
 ax.set_ylabel("€/ha/year")
 
 st.pyplot(fig)
+
+col1, col2, col3 = st.columns(3)
+
+col1.metric("ΔBD", f"{Delta_BD:.3f}")
+col2.metric("S_struct", f"{S_struct:.3f}")
+col3.metric("W_days", f"{W_days:.1f}")
+
+W_index_clean = np.nan_to_num(np.array(W_index_new), nan=0.0)
+
+workability_mean = float(np.mean(W_index_clean))
+workability_prob = float(np.mean(W_index_clean > tau))
+workability_days = float(np.sum(W_index_clean > tau) / df["date"].dt.year.nunique())
+
+st.write("Workability mean:", round(workability_mean, 3))
+st.write("Workability probability:", round(workability_prob, 3))
+st.write("Workable days/year:", round(workability_days, 1))
