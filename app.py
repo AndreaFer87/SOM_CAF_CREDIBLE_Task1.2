@@ -416,7 +416,7 @@ theta_infiltration = {
 }
 
 t_event_default = 3  # hours (ERA5 daily proxy)
-rain_threshold = 10  # mm
+rain_threshold = 20  # mm
 
 df["date"] = pd.to_datetime(df["date"]) 
 
