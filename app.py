@@ -231,7 +231,7 @@ for c in crops:
 
 monthly["N_uptake"] = monthly["Nmin_month"] * monthly["crop_active"]
 
-Ncrop = monthly["N_uptake"].sum() / years
+N_crop = monthly["N_uptake"].sum() / years
 
 
 V_N = N_min * P_N
