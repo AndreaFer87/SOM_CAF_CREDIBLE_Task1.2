@@ -415,8 +415,8 @@ theta_infiltration = {
     "clay": 0.25        # high structural response
 }
 
-t_event_default = 3  # hours (ERA5 daily proxy)
-rain_threshold = 20  # mm
+t_event_default = 6  # hours (ERA5 daily proxy)
+rain_threshold = 10  # mm
 
 df["date"] = pd.to_datetime(df["date"]) 
 
@@ -715,3 +715,4 @@ st.pyplot(fig)
 st.write("Operational savings breakdown:")
 st.write(f"- Machinery hours saved: {H_saved:.2f} h/ha")
 st.write(f"- Diesel saved: {F_saved:.2f} L/ha")
+st.write(f"- Workability days difference: {Delta_W_days:.2f} days")
