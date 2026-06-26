@@ -87,17 +87,17 @@ f_labile = {
 
 def climate_factor_P(climate):
     return {
-        "cold": 0.85,
-        "temperate": 1.0,
-        "warm": 1.15
+        "cold": 0.15,
+        "temperate": 0.5,
+        "warm": 0.8
     }[climate]
 
 
 def climate_factor_S(climate):
     return {
-        "cold": 0.9,
-        "temperate": 1.0,
-        "warm": 1.1
+        "cold": 0.2,
+        "temperate": 0.6,
+        "warm": 0.9
     }[climate]
 
 eta_P = {
