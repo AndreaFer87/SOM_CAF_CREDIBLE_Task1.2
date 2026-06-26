@@ -450,6 +450,29 @@ Delta_W_days = max(W_days_new - W_days_base, 0)
 # 5. CROP WEIGHTING (OPERATIONAL WINDOWS)
 # =========================
 
+crop_structure_weights = {
+    "winter cereals": {
+        "pre_sowing": 0.8,
+        "harvest": 0.6,
+        "traffic_sensitivity": 0.7
+    },
+    "maize": {
+        "pre_sowing": 0.9,
+        "harvest": 0.8,
+        "traffic_sensitivity": 0.85
+    },
+    "soybean": {
+        "pre_sowing": 0.6,
+        "harvest": 0.7,
+        "traffic_sensitivity": 0.65
+    },
+    "tomato": {
+        "pre_sowing": 0.85,
+        "harvest": 0.95,
+        "traffic_sensitivity": 0.9
+    }
+}
+
 w_pre_total = 0
 w_harv_total = 0
 
