@@ -528,41 +528,38 @@ ax.set_ylabel("kg/ha/yr")
 ax.set_title("SOM-driven mineralization (ΔSOC functional response)")
 
 # =========================
-# 2. ANNOTATION: Ncrop (key agronomic signal)
+# ANNOTATIONS CORRETTE
 # =========================
 
-ax.text(
-    0, 
-    N_min * 0.8,
-    f"Ncrop uptake :\n potential:\n{N_crop:.1f} kg/ha/yr",
-    ha="center",
-    va="bottom",
-    fontsize=7,
-    fontweight="bold",
-    color="darkgreen"
-)
+labels = ["N min", "P avail", "S avail"]
+values = [N_min, P_avail, S_avail]
 
-ax.text(
-    0, 
-    P_avail * 1.2,
-    f"{P_avail:.1f}",
-    ha="center",
-    va="bottom",
-    fontsize=7,
-    fontweight="bold",
-    color="black"
-)
+for i, (label, val) in enumerate(zip(labels, values)):
 
-ax.text(
-    0, 
-    S_avail * 1.2,
-    f"{S_avail:.1f}",
-    ha="center",
-    va="bottom",
-    fontsize=7,
-    fontweight="bold",
-    color="black"
-)
+    if label == "N min":
+        text = f"avg Ncrop uptake:\n{N_crop:.1f}"
+        color = "darkgreen"
+        y_offset = -0.1
+    elif label == "P avail":
+        text = f"{P_avail:.1f}"
+        color = "black"
+        y_offset = 0.05
+
+    else:  # S avail
+        text = f"{S_avail:.1f}"
+        color = "black"
+        y_offset = 0.05
+
+    ax.text(
+        i,
+        val * (1 + y_offset),
+        text,
+        ha="center",
+        va="bottom",
+        fontsize=8,
+        fontweight="bold",
+        color=color
+    )
 
 st.pyplot(fig)
 
