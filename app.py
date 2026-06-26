@@ -42,66 +42,81 @@ climate = st.sidebar.selectbox(
 
 st.sidebar.header("Economic parameters")
 
+st.sidebar.header("Fertilzier prices")
 P_N = st.sidebar.number_input("Price N (€/kg)", value=0.54)
 P_P = st.sidebar.number_input("Price P2O5 (€/kg)", value=0.74)
 P_S = st.sidebar.number_input("Price SO3 (€/kg)", value=1.0)
 
-P_water = st.sidebar.number_input("Water value (€/mm)", value=0.15)
 
-# =========================
-# WATER / DAMAGE PARAMETERS
-# =========================
+st.sidebar.header("💧 Water & Hydrology")
 
 P_water = st.sidebar.number_input(
     "Water value (€/mm)",
     value=0.15,
-    help="Marginal value of soil water availability (irrigation + yield sensitivity proxy)"
+    help="Economic value of soil water availability (irrigation replacement + yield sensitivity proxy)"
 )
 
-st.sidebar.markdown("### 💧 Damage coefficients")
+with st.sidebar.expander("💡 Water value – typical literature range"):
+    st.markdown("""
+    - 0.05–0.2 €/mm → rainfed arable systems (low irrigation dependence)  
+    - 0.1–0.5 €/mm → mixed systems (EU average cropland)  
+    - 0.3–1 €/mm → irrigated high-value crops  
+    """)
+    
 
 P_flood = st.sidebar.number_input(
-    "Flood damage (€/mm non-infiltrated)",
+    "Flood damage (€/mm)",
     value=1.2,
-    min_value=0.2,
-    max_value=3.0,
-    step=0.1,
-    help="Economic loss per mm of non-infiltrated water (waterlogging + yield reduction proxy)"
+    help="Damage from waterlogging, yield loss and field accessibility reduction"
 )
 
-with st.sidebar.expander("💡 Literature-based ranges (click to expand)"):
-    st.markdown(
-        """
-        <small>
-
-        **Flood damage (€/mm)**  
-        - 0.05 – 0.3 €/mm → arable crops (low sensitivity systems)  
-        - 0.2 – 1.5 €/mm → low value crops / mixed systems  
-        - 1 – 3 €/mm → horticulture / maize intensive systems  
-        - up to >3 €/mm → high-value protected systems (greenhouse)
-
-        **Erosion/runoff damage (€/mm)**  
-        - 0.05 – 0.3 €/mm → flat arable land (low erosion risk)  
-        - 0.1 – 0.5 €/mm → standard EU cropland  
-        - 0.3 – 1 €/mm → sloping / fragile soils (RUSLE > moderate loss)
-
-        </small>
-        """,
-        unsafe_allow_html=True
-    )
+with st.sidebar.expander("💡 Flood damage ranges"):
+    st.markdown("""
+    - 0.05–0.3 €/mm → flat arable systems  
+    - 0.2–1.5 €/mm → standard EU cropland  
+    - 1–3 €/mm → intensive horticulture / maize systems  
+    """)
 
 P_erosion = st.sidebar.number_input(
-    "Erosion/runoff damage (€/mm runoff)",
+    "Erosion/runoff damage (€/mm)",
     value=0.25,
-    min_value=0.05,
-    max_value=1.0,
-    step=0.05,
-    help="Soil + nutrient + off-site damage cost per mm runoff (RUSLE-based proxy)"
+    help="Off-site + on-site soil loss economic proxy (RUSLE-based valuation)"
 )
 
-C_machinery = st.sidebar.number_input("Machinery cost €/h", value=25.0)
-P_diesel = st.sidebar.number_input("Diesel price €/L", value=1.2)
+with st.sidebar.expander("💡 Erosion damage ranges"):
+    st.markdown("""
+    - 0.05–0.3 €/mm → low slope arable land  
+    - 0.1–0.5 €/mm → typical EU cropland  
+    - 0.3–1 €/mm → sloping / fragile soils  
+    """)
+    
 
+st.sidebar.header("⛽ Field operations costs")
+
+P_diesel = st.sidebar.number_input(
+    "Diesel price (€/L)",
+    value=1.2,
+    help="Fuel cost for field operations (tillage, harvesting, transport)"
+)
+
+with st.sidebar.expander("💡 Diesel price context"):
+    st.markdown("""
+    - EU typical range: 0.9–2.2 €/L  
+    - strongly dependent on taxation + year  
+    """)
+
+C_machinery = st.sidebar.number_input(
+    "Machinery cost (€/h)",
+    value=25.0,
+    help="Operational machinery cost including depreciation, labor and maintenance"
+)
+
+with st.sidebar.expander("💡 Machinery cost typical ranges"):
+    st.markdown("""
+    - 15–25 €/h → small-medium farms (basic mechanization)  
+    - 25–45 €/h → modern mechanized EU farms  
+    - 40–80 €/h → contractor services / high-tech machinery  
+    """)
 # =========================
 # TEXTURE PARAMETERS
 # =========================
