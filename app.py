@@ -47,8 +47,8 @@ P_P = st.sidebar.number_input("Price P2O5 (€/kg)", value=0.74)
 P_S = st.sidebar.number_input("Price SO3 (€/kg)", value=1.0)
 
 P_water = st.sidebar.number_input("Water value (€/mm)", value=0.15)
-P_flood = st.sidebar.slider("Flood damage value (€/mm)", 0.1, 1.0, 0.35)
-P_erosion = st.sidebar.slider("Erosion/runoff damage (€/mm)", 0.05, 0.5, 0.15)
+P_flood = st.sidebar.slider("Flood damage value (€/mm)", 0.2, 3, 2.5)
+P_erosion = st.sidebar.slider("Erosion/runoff damage (€/mm)", 0.05, 1, 0.3)
 
 C_machinery = st.sidebar.number_input("Machinery cost €/h", value=25.0)
 P_diesel = st.sidebar.number_input("Diesel price €/L", value=1.2)
