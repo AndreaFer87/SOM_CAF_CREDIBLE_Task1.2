@@ -37,7 +37,7 @@ years = st.sidebar.slider(
 Climate = st.sidebar.selectbox(
     "Climate",
     ["cold", "temperate", "warm"],
-    index=3
+    index=2
 )
 
 st.sidebar.header("Economic parameters")
