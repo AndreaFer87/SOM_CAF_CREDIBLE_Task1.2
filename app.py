@@ -539,6 +539,8 @@ ax.bar(
 
 ax.set_ylabel("mm/year")
 
+st.pyplot(fig)
+
 
 st.subheader("🧱 Structure module")
 
@@ -555,13 +557,6 @@ ax.bar(
 ax.set_ylabel("€/ha/year")
 
 st.pyplot(fig)
-
-col1, col2, col3, col4 = st.columns(4)
-
-col1.metric("ΔBD", f"{Delta_BD:.3f}")
-col2.metric("S_struct", f"{S_struct:.3f}")
-col3.metric("W_days", f"{W_days:.1f}")
-col4.metric("Workability index", f"{workability_mean:.2f}")
 
 st.write("Operational savings breakdown:")
 st.write(f"- Machinery hours saved: {H_saved:.2f} h/ha")
