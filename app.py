@@ -8,7 +8,7 @@ st.title("🌱 VSoM – Soil Organic Matter Value Framework")
 
 # =========================
 # INPUT SECTION
-# =========================
+# ========================= 
 
 st.sidebar.header("Soil Inputs")
 
@@ -80,7 +80,7 @@ with st.sidebar.expander("💡 Flood damage ranges"):
 P_erosion = st.sidebar.number_input(
     "Erosion/runoff damage (€/mm)",
     value=0.25,
-    help="Off-site + on-site soil loss economic proxy (RUSLE-based valuation)"
+    help="Off-site + on-site soil loss economic proxy"
 )
 
 with st.sidebar.expander("💡 Erosion damage ranges"):
@@ -338,7 +338,7 @@ SOC_effect_layer = 10  # cm
 
 Delta_PAW_surface = alpha[texture] * delta_SOC_percent
 
-root_access_factor = 1 - np.exp(-z_eff / 15)
+root_access_factor = 1 - np.exp(-z_eff / 10)
 
 Delta_PAW = Delta_PAW_surface * root_access_factor
 
@@ -418,7 +418,7 @@ theta_infiltration = {
 t_event_default = 6  # hours (ERA5 daily proxy)
 rain_threshold = 10  # mm
 
-df["date"] = pd.to_datetime(df["date"])
+df["date"] = pd.to_datetime(df["date"]) 
 
 # rainfall (mm/day)
 df["P_k"] = df["precipitation_mm"]
