@@ -80,9 +80,9 @@ def k_minN(climate, texture):
     return base * texture_factor
 
 f_labile = {
-    "N": 0.03,   # 2–5% SOM active N pool
-    "P": 0.005,  # 0.2–1%
-    "S": 0.01
+    "N": 0.9,   SOM active N pool
+    "P": 0.05,  SOM active P pool
+    "S": 0.1 SOM active S pool
 }
 
 eta_P = {
