@@ -144,121 +144,89 @@ P_avail = SOM_functional * P_C * eta_P[texture]* 0.3 * 100000 * BD_ref * f_labil
 P_avail = P_avail * (1 / (1 + clay * 0.02))  # adsorption penalty
 S_avail = SOM_functional * S_C * eta_S[texture]* 0.3 * 100000 * BD_ref * f_labile["S"]* climate_factor_S(climate)
 
-
 # =========================
-# CROP CALENDAR (NEW CORRECT STRUCTURE)
-# =========================
-
-crop_calendar = {
-    "winter cereals": {"months": 10},
-    "maize": {"months": 5},
-    "soybean": {"months": 5},
-    "tomato": {"months": 6}
-}
-
-# ONLY allowed crops come from calendar
-available_crops = list(crop_calendar.keys())
-
-
-U_m = {
-    "winter cereals": {
-        "establishment": 0.15,
-        "vegetative_peak": 0.45,
-        "reproductive": 0.30,
-        "senescence": 0.10
-    },
-    "maize": {
-        "establishment": 0.10,
-        "vegetative_peak": 0.60,
-        "reproductive": 0.25,
-        "senescence": 0.05
-    },
-    "soybean": {
-        "establishment": 0.10,
-        "vegetative_peak": 0.35,
-        "reproductive": 0.45,
-        "senescence": 0.10
-    },
-    "tomato": {
-        "establishment": 0.15,
-        "vegetative_peak": 0.40,
-        "reproductive": 0.35,
-        "senescence": 0.10
-    }
-}
-
-crop_structure_weights = {
-    "winter cereals": {
-        "pre_sowing": 0.8,
-        "harvest": 0.6,
-        "traffic_sensitivity": 0.7
-    },
-    "maize": {
-        "pre_sowing": 0.9,
-        "harvest": 0.8,
-        "traffic_sensitivity": 0.85
-    },
-    "soybean": {
-        "pre_sowing": 0.6,
-        "harvest": 0.7,
-        "traffic_sensitivity": 0.65
-    },
-    "tomato": {
-        "pre_sowing": 0.85,
-        "harvest": 0.95,
-        "traffic_sensitivity": 0.9
-    }
-}
-# =========================
-# N CROP MODULE (SEQUENTIAL ROTATION FIX)
+# ERA5 CLIMATE DRIVER (MOVE TO NUTRIENT MODULE)
 # =========================
 
+from pathlib import Path
+import pandas as pd
 import numpy as np
 
-n_months = 12
+DATA_PATH = Path(__file__).parent / "data" / "era5_processed_daily_data_id_crp_103.csv"
 
-N_monthly_base = np.ones(n_months) * (N_min / n_months)
+df = pd.read_csv(DATA_PATH)
+df["date"] = pd.to_datetime(df["date"])
 
-N_total_profile = np.zeros(n_months)
+# monthly aggregation (core for K2m)
+df["month"] = df["date"].dt.to_period("M")
 
-t_cursor = 0  # <-- chiave: posizione nella rotazione
+monthly = df.groupby("month").agg({
+    "temperature_mean": "mean",
+    "precipitation_mm": "sum",
+    "potential_evaporation_mm": "sum"
+}).reset_index()
+
+# =========================
+# K2m mensile FUNCTION 
+# =========================
+
+def k2m(T, A, L):
+    return (((T - 0.5) * 240) /
+            (((A + 20) * (0.3 * L + 20)) / 12)) * 0.5
+
+
+# =========================
+# SOIL TEXTURE INPUTS
+# =========================
+
+A = clay      # %
+L = silt      # %
+
+monthly["K2m"] = monthly["temperature_mean"].apply(
+    lambda T: k2m(T, A, L)
+)
+
+# =========================
+# CROP WINDOWS (AGRONOMIC MASK)
+# =========================
+
+crop_windows = {
+    "winter cereals": [10,11,12,1,2,3,4,5],
+    "maize": [4,5,6,7,8],
+    "soybean": [5,6,7,8],
+    "tomato": [4,5,6,7]
+}
+
+# =========================
+# BASE N MIN (from SOM)
+# =========================
+
+N_min_monthly = N_min / 12
+
+# =========================
+# N CROP (K2m + ROTATION MATCH)
+# =========================
+
+N_crop_total = 0
 
 for c in crops:
 
-    crop_months = int(round(crop_calendar[c]["months"]))
-    intensity = crop_calendar[c].get("intensity", 1.0)
+    window = crop_windows[c]
 
-    phen = U_m[c]
-    phen_weights = np.array(list(phen.values()), dtype=float)
-    phen_weights = phen_weights / phen_weights.sum()
+    N_crop_c = 0
 
-    crop_profile = np.zeros(n_months)
+    for m in window:
 
-    # distribuzione SOLO nel blocco temporale assegnato
-    for i in range(crop_months):
+        # match mese con ERA5 month index
+        k2m_value = monthly.loc[m-1, "K2m"]
 
-        global_month = (t_cursor + i) % n_months
+        # mineralizzazione disponibile in quel mese
+        N_crop_c += N_min_monthly * k2m_value
 
-        phase_idx = int(i / crop_months * len(phen_weights))
-        phase_idx = min(phase_idx, len(phen_weights) - 1)
+    N_crop_total += N_crop_c
 
-        crop_profile[global_month] += phen_weights[phase_idx]
-
-    # normalizzazione interna coltura
-    if crop_profile.sum() > 0:
-        crop_profile /= crop_profile.sum()
-
-    # scaling temporale reale
-    crop_profile *= (crop_months / 12.0) * intensity
-
-    # accumulo su asse temporale
-    N_total_profile += N_monthly_base * crop_profile
-
-    # avanzamento rotazione (FONDAMENTALE)
-    t_cursor += crop_months
-
-# chiusura ciclo
-N_crop = N_total_profile.sum() / years
+# average over rotation length
+N_crop = N_crop_total / years
 
 V_N = N_min * P_N
 V_P = P_avail * P_P
