@@ -155,7 +155,41 @@ import numpy as np
 DATA_PATH = Path(__file__).parent / "data" / "era5_processed_daily_data_id_crp_103.csv"
 
 df = pd.read_csv(DATA_PATH)
-st.write("ERA5 columns:", df.columns)
+
+# =========================
+# COLUMN STANDARDIZATION
+# =========================
+
+rename_map = {
+    "t2m": "temperature_mean",
+    "temperature": "temperature_mean",
+
+    "tp": "precipitation_mm",
+    "precipitation": "precipitation_mm",
+
+    "pev": "potential_evaporation_mm",
+    "e": "potential_evaporation_mm",
+    "evaporation": "potential_evaporation_mm"
+}
+
+df = df.rename(columns=rename_map)
+
+required_cols = ["temperature_mean", "precipitation_mm", "potential_evaporation_mm"]
+
+missing = [c for c in required_cols if c not in df.columns]
+
+if len(missing) > 0:
+    st.error(f"Missing ERA5 columns: {missing}")
+    st.stop()
+
+df["month"] = df["date"].dt.to_period("M")
+
+monthly = df.groupby("month")[required_cols].agg({
+    "temperature_mean": "mean",
+    "precipitation_mm": "sum",
+    "potential_evaporation_mm": "sum"
+}).reset_index()
+
 df["date"] = pd.to_datetime(df["date"])
 
 # monthly aggregation (core for K2m)
