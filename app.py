@@ -244,7 +244,7 @@ for c in crops:
 # chiusura ciclo
 N_crop = N_total_profile.sum() / years
 
-V_N = N_crop * P_N
+V_N = N_min * P_N
 V_P = P_avail * P_P
 V_S = S_avail * P_S
 
