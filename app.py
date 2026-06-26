@@ -12,16 +12,15 @@ st.title("🌱 VSoM – Soil Organic Matter Value Framework")
 
 st.sidebar.header("Soil Inputs")
 
-SOC = st.sidebar.number_input("SOC stock (t C/ha)", value=60.0)
 delta_SOC = st.sidebar.number_input("ΔSOC (t C/ha/yr)", value=0.4)
 
-sand = st.sidebar.number_input("% Sand", 0, 100, 40)
-clay = st.sidebar.number_input("% Clay", 0, 100, 20)
+sand = st.sidebar.number_input("% Sand", 0, 100, 20)
+clay = st.sidebar.number_input("% Clay", 0, 100, 40)
 silt = 100 - sand - clay
 
-BD_ref = st.sidebar.number_input("Bulk density (g/cm3)", value=1.3)
+BD_ref = st.sidebar.number_input("Bulk density (g/cm3)", value=1.35)
 
-z_eff = st.sidebar.number_input("Effective rooting depth (cm)", value=30)
+z_eff = st.sidebar.number_input("Effective rooting depth (cm)", value=60)
 
 st.sidebar.header("Crop rotation")
 crops = st.sidebar.multiselect(
@@ -47,7 +46,7 @@ P_flood = st.sidebar.slider("Flood damage value (€/mm)", 0.1, 1.0, 0.35)
 P_erosion = st.sidebar.slider("Erosion/runoff damage (€/mm)", 0.05, 0.5, 0.15)
 
 C_machinery = st.sidebar.number_input("Machinery cost €/h", value=25.0)
-P_diesel = st.sidebar.number_input("Diesel price €/L", value=1.7)
+P_diesel = st.sidebar.number_input("Diesel price €/L", value=1.2)
 
 # =========================
 # TEXTURE PARAMETERS
@@ -516,16 +515,52 @@ st.subheader("🌱 Nutrients module")
 
 fig, ax = plt.subplots()
 
-ax.bar(
+# =========================
+# 1. MAIN MINERALIZATION BARS
+# =========================
+bars = ax.bar(
     ["N min", "P avail", "S avail"],
-    [N_crop, P_avail, S_avail]
+    [N_min, P_avail, S_avail],
+    color=["tab:green", "tab:blue", "tab:orange"]
 )
 
 ax.set_ylabel("kg/ha/yr")
+ax.set_title("SOM-driven mineralization (ΔSOC functional response)")
+
+# =========================
+# 2. ANNOTATION: Ncrop (key agronomic signal)
+# =========================
+
+ax.text(
+    0, 
+    N_min * 1.05,
+    f"Ncrop uptake potential:\n{N_crop:.1f} kg/ha/yr",
+    ha="center",
+    va="bottom",
+    fontsize=10,
+    fontweight="bold",
+    color="darkgreen"
+)
 
 st.pyplot(fig)
 
-st.info("SOM-driven mineralization enhancement based on ΔSOC functional response")
+# =========================
+# 3. EXPLANATION BOX (IMPORTANT FOR READABILITY)
+# =========================
+
+st.info(
+"""
+**Interpretation**
+
+- **N min** = SOM-driven nitrogen mineralization potential (soil supply)
+- **P avail / S avail** = structurally mediated release of P and S pools
+- **Ncrop uptake potential** = effective nitrogen available for crop uptake after rotation weighting and climatic adjustment
+
+👉 Ncrop represents the *plant-available fraction* of mineralized nitrogen integrated over crop demand and phenology.
+"""
+)
+
+
 
 
 st.subheader("💧 Water module")
