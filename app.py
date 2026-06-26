@@ -575,7 +575,7 @@ values = [N_min, P_avail, S_avail]
 for i, (label, val) in enumerate(zip(labels, values)):
 
     if label == "N min":
-        text = f"avg Ncrop uptake:\n{N_crop:.1f}"
+        text = f"SOM-driven Navail :\n  to crops:\n{N_crop:.1f}"
         color = "darkgreen"
         y_offset = -0.1
     elif label == "P avail":
@@ -609,12 +609,9 @@ st.info(
 """
 **Interpretation**
 
-- **N min** = SOM-driven nitrogen mineralization potential (soil supply)
-- **P avail / S avail** = structurally mediated release of P and S pools
-- **Ncrop uptake potential** = effective nitrogen available for crop uptake after rotation weighting and climatic adjustment
-
-👉 Ncrop represents the *plant-available fraction* of mineralized nitrogen integrated over crop demand and phenology.
-"""
+- **N min** = annual SOM-driven available N mineralization potential to crop (soil supply)
+- **P avail / S avail** = structurally mediated annual release of available P and S pools
+- **SOM-driven Navail to crops** = represents the fraction of SOM-driven N mineralization effectively accessible to the cropping system after temporal and rotational constraints.
 )
 
 
