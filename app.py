@@ -85,6 +85,21 @@ f_labile = {
     "S": 0.8 #SOM active S pool
 }
 
+def climate_factor_P(climate):
+    return {
+        "cold": 0.85,
+        "temperate": 1.0,
+        "warm": 1.15
+    }[climate]
+
+
+def climate_factor_S(climate):
+    return {
+        "cold": 0.9,
+        "temperate": 1.0,
+        "warm": 1.1
+    }[climate]
+
 eta_P = {
     "sand": 0.4,
     "loam": 0.6,
@@ -125,9 +140,9 @@ SOM_functional = delta_SOC/10/10/BD_ref/0.3 * k_SOM_map[texture]
 C_N = 10
 
 N_min = SOM_functional * f_labile["N"]* k_minN(climate, texture) * 0.3 * 100000 * BD_ref
-P_avail = SOM_functional * P_C * eta_P[texture]* 0.3 * 100000 * BD_ref * f_labile["P"]
+P_avail = SOM_functional * P_C * eta_P[texture]* 0.3 * 100000 * BD_ref * f_labile["P"]* climate_factor_P(climate)
 P_avail = P_avail * (1 / (1 + clay * 0.02))  # adsorption penalty
-S_avail = SOM_functional * S_C * eta_S[texture]* 0.3 * 100000 * BD_ref * f_labile["S"]
+S_avail = SOM_functional * S_C * eta_S[texture]* 0.3 * 100000 * BD_ref * f_labile["S"]* climate_factor_S(climate)
 
 
 # =========================
