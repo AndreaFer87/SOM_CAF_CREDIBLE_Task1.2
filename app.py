@@ -612,6 +612,7 @@ st.info(
 - **N min** = annual SOM-driven available N mineralization potential to crop (soil supply)
 - **P avail / S avail** = structurally mediated annual release of available P and S pools
 - **SOM-driven Navail to crops** = represents the fraction of SOM-driven N mineralization effectively accessible to the cropping system after temporal and rotational constraints.
+"""
 )
 
 
