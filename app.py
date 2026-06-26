@@ -533,13 +533,35 @@ ax.set_title("SOM-driven mineralization (ΔSOC functional response)")
 
 ax.text(
     0, 
-    N_min * 0.9,
+    N_min * 0.8,
     f"Ncrop uptake :\n potential:\n{N_crop:.1f} kg/ha/yr",
     ha="center",
     va="bottom",
-    fontsize=8,
+    fontsize=7,
     fontweight="bold",
     color="darkgreen"
+)
+
+ax.text(
+    0, 
+    P_avail * 1.2,
+    f"{P_avail:.1f}",
+    ha="center",
+    va="bottom",
+    fontsize=7,
+    fontweight="bold",
+    color="black"
+)
+
+ax.text(
+    0, 
+    S_avail * 1.2,
+    f"{S_avail:.1f}",
+    ha="center",
+    va="bottom",
+    fontsize=7,
+    fontweight="bold",
+    color="black"
 )
 
 st.pyplot(fig)
