@@ -716,3 +716,6 @@ st.write("Operational savings breakdown:")
 st.write(f"- Machinery hours saved: {H_saved:.2f} h/ha")
 st.write(f"- Diesel saved: {F_saved:.2f} L/ha")
 st.write(f"- Workability days difference: {Delta_W_days:.2f} days")
+st.write(f"- Workability pre-sowing days difference: {Delta_W_pre:.2f} days")
+st.write(f"- Workability harvest days difference: {Delta_W_harv:.2f} days")
+
