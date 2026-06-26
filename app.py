@@ -204,10 +204,26 @@ monthly["K2m"] = monthly["K2m"].clip(lower=0.05, upper=0.6)
 
 N_min_year = N_min
 
-monthly["Nmin_month"] = N_min_year * (
-    monthly["K2m"] / monthly["K2m"].sum()
-)
+# =========================
+# RAW MONTHLY K2m (NO NORMALIZATION)
+# =========================
 
+monthly["K2m_raw"] = monthly["K2m"]
+
+# rescale to realistic seasonal amplitude
+monthly["K2m_norm"] = monthly["K2m_raw"] / monthly["K2m_raw"].mean()
+
+
+# =========================
+# MONTHLY N MIN FLUX (REALISTIC)
+# =========================
+
+# IMPORTANT: do NOT force sum = N_min
+# instead distribute around seasonal activity
+
+monthly["Nmin_month"] = (
+    (N_min_year / 12) * monthly["K2m_norm"]
+)
 # =========================
 # CROP WINDOW
 # =========================
@@ -226,12 +242,20 @@ for c in crops:
         monthly.loc[m % 12, "crop_active"] = 1
 
 # =========================
-# FINAL N CROP
+# 4. EFFECTIVE UPTAKE (NO DOUBLE NORMALIZATION)
 # =========================
 
-monthly["N_uptake"] = monthly["Nmin_month"] * monthly["crop_active"]
+monthly["N_uptake"] = (
+    monthly["Nmin_month"] * monthly["crop_active"]
+)
 
-N_crop = monthly["N_uptake"].sum() / years
+
+# =========================
+# 5. FINAL Ncrop (FIXED)
+# =========================
+
+# DO NOT divide again by years in monthly aggregation context
+N_crop = monthly["N_uptake"].sum()
 
 
 V_N = N_min * P_N
