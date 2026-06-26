@@ -516,7 +516,7 @@ V_structure = (H_saved * C_machinery) + (F_saved * P_diesel)
 
 
 st.subheader(
-    f"💰 VSoM Total Breakdown – {SOM_functional:.2f}% annual SOM content increase due to CF practice"
+    f"💰 VSoM Total Breakdown for a {SOM_functional:.2f}% annual SOM content increase due to CF practice"
 )
 
 c1, c2, c3 = st.columns(3)
