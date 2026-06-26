@@ -577,7 +577,7 @@ for i, (label, val) in enumerate(zip(labels, values)):
     if label == "N min":
         text = f"SOM-driven Navail :\n  to crops:\n{N_crop:.1f}"
         color = "darkgreen"
-        y_offset = -0.1
+        y_offset = -0.3
     elif label == "P avail":
         text = f"{P_avail:.1f}"
         color = "black"
@@ -611,7 +611,7 @@ st.info(
 
 - **N min** = annual SOM-driven available N mineralization potential to crop (soil supply)
 - **P avail / S avail** = structurally mediated annual release of available P and S pools
-- **SOM-driven Navail to crops** = represents the fraction of SOM-driven N mineralization effectively accessible to the cropping system after temporal and rotational constraints.
+- **SOM-driven Navail to crops** = represents the fraction of SOM-driven N mineralization effectively accessible to the crop into the rotation.
 """
 )
 
