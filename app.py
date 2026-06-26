@@ -534,7 +534,7 @@ ax.set_title("SOM-driven mineralization (ΔSOC functional response)")
 ax.text(
     0, 
     N_min * 0.9,
-    f"Ncrop uptake potential:\n{N_crop:.1f} kg/ha/yr",
+    f"Ncrop uptake :\n potential:\n{N_crop:.1f} kg/ha/yr",
     ha="center",
     va="bottom",
     fontsize=8,
