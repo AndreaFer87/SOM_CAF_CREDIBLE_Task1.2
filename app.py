@@ -47,8 +47,57 @@ P_P = st.sidebar.number_input("Price P2O5 (€/kg)", value=0.74)
 P_S = st.sidebar.number_input("Price SO3 (€/kg)", value=1.0)
 
 P_water = st.sidebar.number_input("Water value (€/mm)", value=0.15)
-P_flood = st.sidebar.slider("Flood damage value (€/mm)", 0.2, 3, 2.5)
-P_erosion = st.sidebar.slider("Erosion/runoff damage (€/mm)", 0.05, 1, 0.3)
+
+# =========================
+# WATER / DAMAGE PARAMETERS
+# =========================
+
+P_water = st.sidebar.number_input(
+    "Water value (€/mm)",
+    value=0.15,
+    help="Marginal value of soil water availability (irrigation + yield sensitivity proxy)"
+)
+
+st.sidebar.markdown("### 💧 Damage coefficients")
+
+P_flood = st.sidebar.number_input(
+    "Flood damage (€/mm non-infiltrated)",
+    value=1.2,
+    min_value=0.2,
+    max_value=3.0,
+    step=0.1,
+    help="Economic loss per mm of non-infiltrated water (waterlogging + yield reduction proxy)"
+)
+
+with st.sidebar.expander("💡 Literature-based ranges (click to expand)"):
+    st.markdown(
+        """
+        <small>
+
+        **Flood damage (€/mm)**  
+        - 0.05 – 0.3 €/mm → arable crops (low sensitivity systems)  
+        - 0.2 – 1.5 €/mm → low value crops / mixed systems  
+        - 1 – 3 €/mm → horticulture / maize intensive systems  
+        - up to >3 €/mm → high-value protected systems (greenhouse)
+
+        **Erosion/runoff damage (€/mm)**  
+        - 0.05 – 0.3 €/mm → flat arable land (low erosion risk)  
+        - 0.1 – 0.5 €/mm → standard EU cropland  
+        - 0.3 – 1 €/mm → sloping / fragile soils (RUSLE > moderate loss)
+
+        </small>
+        """,
+        unsafe_allow_html=True
+    )
+
+P_erosion = st.sidebar.number_input(
+    "Erosion/runoff damage (€/mm runoff)",
+    value=0.25,
+    min_value=0.05,
+    max_value=1.0,
+    step=0.05,
+    help="Soil + nutrient + off-site damage cost per mm runoff (RUSLE-based proxy)"
+)
 
 C_machinery = st.sidebar.number_input("Machinery cost €/h", value=25.0)
 P_diesel = st.sidebar.number_input("Diesel price €/L", value=1.2)
