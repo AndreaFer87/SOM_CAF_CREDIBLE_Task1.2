@@ -145,7 +145,7 @@ P_avail = P_avail * (1 / (1 + clay * 0.02))  # adsorption penalty
 S_avail = SOM_functional * S_C * eta_S[texture]* 0.3 * 100000 * BD_ref * f_labile["S"]* climate_factor_S(climate)
 
 # =========================
-# ERA5 CLIMATE DRIVER (MOVE TO NUTRIENT MODULE)
+# ERA5 CLIMATE DRIVER (CLEAN FIXED VERSION)
 # =========================
 
 from pathlib import Path
@@ -155,12 +155,12 @@ import numpy as np
 DATA_PATH = Path(__file__).parent / "data" / "era5_processed_daily_data_id_crp_103.csv"
 
 df = pd.read_csv(DATA_PATH)
-
-# =========================
-# ERA5 MONTHLY BLOCK (FIXED FOR YOUR DATASET)
-# =========================
-
 df["date"] = pd.to_datetime(df["date"])
+
+# =========================
+# MONTHLY AGGREGATION
+# =========================
+
 df["month"] = df["date"].dt.to_period("M")
 
 monthly = df.groupby("month").agg({
@@ -169,21 +169,28 @@ monthly = df.groupby("month").agg({
     "potential_evaporation_mm": "sum"
 }).reset_index()
 
-# climate stress proxy (used later in K2m)
+# =========================
+# SOIL CONTEXT
+# =========================
+
+A = clay
+L = silt
+
+monthly["A"] = A
+monthly["L"] = L
+
+# rename temperature for clarity
 monthly["T"] = monthly["temperature_2m"]
-monthly["A"] = clay
-monthly["L"] = silt
 
 # =========================
-# K2m MONTHLY (FROM YOUR EQUATION)
+# K2m FUNCTION (YOUR FORMULA)
 # =========================
 
 def k2m(T, A, L):
-
     return (((T - 0.5) * 240) /
             (((A + 20) * (0.3 * L + 20)) / 12)) * 0.5
 
-
+# apply correctly (ONLY ONCE)
 monthly["K2m"] = monthly.apply(
     lambda r: k2m(r["T"], r["A"], r["L"]),
     axis=1
@@ -192,27 +199,17 @@ monthly["K2m"] = monthly.apply(
 monthly["K2m"] = monthly["K2m"].clip(lower=0.05, upper=0.6)
 
 # =========================
-# SOIL TEXTURE INPUTS
+# NORMALIZED N MIN DISTRIBUTION
 # =========================
 
-A = clay      # %
-L = silt      # %
+N_min_year = N_min
 
-monthly["K2m"] = monthly["temperature_mean"].apply(
-    lambda T: k2m(T, A, L)
+monthly["Nmin_month"] = N_min_year * (
+    monthly["K2m"] / monthly["K2m"].sum()
 )
 
-
 # =========================
-# N MIN MONTHLY DISTRIBUTION (IMPROVED)
-# =========================
-
-N_min_year = N_min  # kg/ha/yr
-
-monthly["Nmin_month"] = N_min_year * (monthly["K2m"] / monthly["K2m"].sum())
-
-# =========================
-# CROP PRESENCE (AGRONOMIC WINDOW ONLY)
+# CROP WINDOW
 # =========================
 
 crop_window = {
@@ -226,19 +223,15 @@ monthly["crop_active"] = 0
 
 for c in crops:
     for m in crop_window[c]:
-        monthly.loc[monthly.index[m % 12], "crop_active"] = 1
-        
+        monthly.loc[m % 12, "crop_active"] = 1
+
 # =========================
-# N CROP FINAL (FIXED AGRONOMIC LOGIC)
+# FINAL N CROP
 # =========================
 
-monthly["N_uptake"] = (
-    monthly["Nmin_month"] *
-    monthly["crop_active"]
-)
+monthly["N_uptake"] = monthly["Nmin_month"] * monthly["crop_active"]
 
 Ncrop = monthly["N_uptake"].sum() / years
-
 
 
 V_N = N_min * P_N
