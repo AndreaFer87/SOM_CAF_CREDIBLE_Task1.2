@@ -157,58 +157,39 @@ DATA_PATH = Path(__file__).parent / "data" / "era5_processed_daily_data_id_crp_1
 df = pd.read_csv(DATA_PATH)
 
 # =========================
-# COLUMN STANDARDIZATION
+# ERA5 MONTHLY BLOCK (FIXED FOR YOUR DATASET)
 # =========================
 
-rename_map = {
-    "t2m": "temperature_mean",
-    "temperature": "temperature_mean",
-
-    "tp": "precipitation_mm",
-    "precipitation": "precipitation_mm",
-
-    "pev": "potential_evaporation_mm",
-    "e": "potential_evaporation_mm",
-    "evaporation": "potential_evaporation_mm"
-}
-
-df = df.rename(columns=rename_map)
-
-required_cols = ["temperature_mean", "precipitation_mm", "potential_evaporation_mm"]
-
-missing = [c for c in required_cols if c not in df.columns]
-
-if len(missing) > 0:
-    st.error(f"Missing ERA5 columns: {missing}")
-    st.stop()
-
-df["month"] = df["date"].dt.to_period("M")
-
-monthly = df.groupby("month")[required_cols].agg({
-    "temperature_mean": "mean",
-    "precipitation_mm": "sum",
-    "potential_evaporation_mm": "sum"
-}).reset_index()
-
 df["date"] = pd.to_datetime(df["date"])
-
-# monthly aggregation (core for K2m)
 df["month"] = df["date"].dt.to_period("M")
 
 monthly = df.groupby("month").agg({
-    "temperature_mean": "mean",
+    "temperature_2m": "mean",
     "precipitation_mm": "sum",
     "potential_evaporation_mm": "sum"
 }).reset_index()
 
+# climate stress proxy (used later in K2m)
+monthly["T"] = monthly["temperature_2m"]
+monthly["A"] = clay
+monthly["L"] = silt
+
 # =========================
-# K2m mensile FUNCTION 
+# K2m MONTHLY (FROM YOUR EQUATION)
 # =========================
 
 def k2m(T, A, L):
+
     return (((T - 0.5) * 240) /
             (((A + 20) * (0.3 * L + 20)) / 12)) * 0.5
 
+
+monthly["K2m"] = monthly.apply(
+    lambda r: k2m(r["T"], r["A"], r["L"]),
+    axis=1
+)
+
+monthly["K2m"] = monthly["K2m"].clip(lower=0.05, upper=0.6)
 
 # =========================
 # SOIL TEXTURE INPUTS
@@ -221,47 +202,44 @@ monthly["K2m"] = monthly["temperature_mean"].apply(
     lambda T: k2m(T, A, L)
 )
 
+
 # =========================
-# CROP WINDOWS (AGRONOMIC MASK)
+# N MIN MONTHLY DISTRIBUTION (IMPROVED)
 # =========================
 
-crop_windows = {
-    "winter cereals": [10,11,12,1,2,3,4,5],
-    "maize": [4,5,6,7,8],
-    "soybean": [5,6,7,8],
-    "tomato": [4,5,6,7]
+N_min_year = N_min  # kg/ha/yr
+
+monthly["Nmin_month"] = N_min_year * (monthly["K2m"] / monthly["K2m"].sum())
+
+# =========================
+# CROP PRESENCE (AGRONOMIC WINDOW ONLY)
+# =========================
+
+crop_window = {
+    "winter cereals": list(range(10, 12)) + list(range(0, 5)),
+    "maize": list(range(4, 9)),
+    "soybean": list(range(4, 9)),
+    "tomato": list(range(3, 9))
 }
 
-# =========================
-# BASE N MIN (from SOM)
-# =========================
-
-N_min_monthly = N_min / 12
-
-# =========================
-# N CROP (K2m + ROTATION MATCH)
-# =========================
-
-N_crop_total = 0
+monthly["crop_active"] = 0
 
 for c in crops:
+    for m in crop_window[c]:
+        monthly.loc[monthly.index[m % 12], "crop_active"] = 1
+        
+# =========================
+# N CROP FINAL (FIXED AGRONOMIC LOGIC)
+# =========================
 
-    window = crop_windows[c]
+monthly["N_uptake"] = (
+    monthly["Nmin_month"] *
+    monthly["crop_active"]
+)
 
-    N_crop_c = 0
+Ncrop = monthly["N_uptake"].sum() / years
 
-    for m in window:
 
-        # match mese con ERA5 month index
-        k2m_value = monthly.loc[m-1, "K2m"]
-
-        # mineralizzazione disponibile in quel mese
-        N_crop_c += N_min_monthly * k2m_value
-
-    N_crop_total += N_crop_c
-
-# average over rotation length
-N_crop = N_crop_total / years
 
 V_N = N_min * P_N
 V_P = P_avail * P_P
