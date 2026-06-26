@@ -515,14 +515,15 @@ V_structure = (H_saved * C_machinery) + (F_saved * P_diesel)
 
 
 
-st.subheader("💰 VSoM Total Breakdown")
+st.subheader(
+    f"💰 VSoM Total Breakdown – {SOM_functional:.2f} (Annual SOM content increase due to CF practice)"
+)
 
-c1, c2, c3, c4 = st.columns(4)
+c1, c2, c3 = st.columns(3)
 
 c1.metric("V Nutrients", f"{V_nutrients:.2f} €")
 c2.metric("V Water", f"{V_water:.2f} €")
 c3.metric("V Structure", f"{V_structure:.2f} €")
-c4.metric("SOM increase", f"{SOM_functional:.2f} % annual increase")
 
 st.metric("TOTAL VSoM", f"{(V_nutrients + V_water + V_structure):.2f} €/ha/yr")
 
