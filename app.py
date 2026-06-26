@@ -81,8 +81,8 @@ def k_minN(climate, texture):
 
 f_labile = {
     "N": 0.9,   #SOM active N pool
-    "P": 0.25,  #SOM active P pool
-    "S": 0.20 #SOM active S pool
+    "P": 0.8,  #SOM active P pool
+    "S": 0.8 #SOM active S pool
 }
 
 eta_P = {
@@ -126,6 +126,7 @@ C_N = 10
 
 N_min = SOM_functional * f_labile["N"]* k_minN(climate, texture) * 0.3 * 100000 * BD_ref
 P_avail = SOM_functional * P_C * eta_P[texture]* 0.3 * 100000 * BD_ref * f_labile["P"]
+P_avail = P_avail * (1 / (1 + clay * 0.02))  # adsorption penalty
 S_avail = SOM_functional * S_C * eta_S[texture]* 0.3 * 100000 * BD_ref * f_labile["S"]
 
 
