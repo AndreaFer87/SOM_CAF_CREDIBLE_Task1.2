@@ -312,7 +312,7 @@ monthly["Nmin_month"] = (
 # =========================
 
 crop_window = {
-    "winter cereals": list(range(10, 12)) + list(range(0, 5)),
+    "winter cereals": [2, 3, 4, 5, 6, 8, 9, 10]),
     "maize": list(range(4, 9)),
     "soybean": list(range(4, 9)),
     "tomato": list(range(3, 9))
@@ -450,7 +450,7 @@ theta_infiltration = {
     "sand": 0.7,      # low sensitivity
     "loam": 1.15,      # medium
     "clay loam": 1.20,
-    "clay": 1.25        # high structural response
+    "clay": 1.45        # high structural response
 }
 
 t_event_default = 6  # hours (ERA5 daily proxy)
@@ -621,11 +621,11 @@ Delta_W_harv = Delta_W_days * w_harv
 # 6. OPERATIONAL TRANSLATION
 # =========================
 
-H_pre = 2.0
-H_harv = 2.5
+H_pre = 1.2
+H_harv = 4.5
 
-F_pre = 12.0   # 👈 coerente con tuo vincolo (>10 L/ha pre-seeding)
-F_harv = 8.0
+F_pre = 6   # 👈 coerente con tuo vincolo (>10 L/ha pre-seeding)
+F_harv = 16
 
 H_saved = (Delta_W_pre * H_pre) + (Delta_W_harv * H_harv)
 F_saved = (Delta_W_pre * F_pre) + (Delta_W_harv * F_harv)
