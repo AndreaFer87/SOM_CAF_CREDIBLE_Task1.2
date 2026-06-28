@@ -409,14 +409,14 @@ phi_struct = {
 }
 
 theta_infiltration = {
-    "sand": 0.07,      # low sensitivity
-    "loam": 0.15,      # medium
-    "clay loam": 0.20,
-    "clay": 0.25        # high structural response
+    "sand": 0.7,      # low sensitivity
+    "loam": 1.15,      # medium
+    "clay loam": 1.20,
+    "clay": 1.25        # high structural response
 }
 
 t_event_default = 6  # hours (ERA5 daily proxy)
-rain_threshold = 10  # mm
+rain_threshold = 20  # mm
 
 df["date"] = pd.to_datetime(df["date"]) 
 
@@ -443,7 +443,7 @@ def INF_base(Pk, tk):
     return np.minimum(I0_event * tk, Pk)
 
 
-I_new_event = I0_event * (1 + theta_infiltration[texture] * delta_SOC_percent)
+I_new_event = I0_event * (1 + theta_infiltration[texture] * delta_SOC_percent*1.2)
 
 def INF_new(Pk, tk):
     return np.minimum(I_new_event * tk, Pk)
