@@ -409,10 +409,10 @@ phi_struct = {
 }
 
 theta_infiltration = {
-    "sand": 0.07,      # low sensitivity
-    "loam": 0.15,      # medium
-    "clay loam": 0.20,
-    "clay": 0.25        # high structural response
+    "sand": 0.7,      # low sensitivity
+    "loam": 1.15,      # medium
+    "clay loam": 1.20,
+    "clay": 1.25        # high structural response
 }
 
 t_event_default = 6  # hours (ERA5 daily proxy)
