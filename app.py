@@ -216,28 +216,10 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-DATA_PATH = Path(__file__).parent / "data" / "Dati_Cordoba.csv"
+DATA_PATH = Path(__file__).parent / "data" / "era5_processed_daily_data_id_crp_103.csv"
 
 
-df = pd.read_csv(DATA_PATH, encoding="utf-8-sig")
-df.columns = df.columns.str.strip()
-
-# 2. DEBUG TEMPORANEO: Stampa le colonne reali su Streamlit per capire cosa vede Pandas
-st.write("### 🔍 Debug Colonne CSV Rilevate:")
-st.write(list(df.columns))
-
-# 3. FIX DI EMERGENZA: Se Pandas ha unito tutto a causa del punto e virgola (;), ri-analizza il DF
-if len(df.columns) == 1 and ";" in df.columns[0]:
-    st.warning("⚠️ Rilevato separatore ';' nel CSV. Tento la correzione automatica.")
-    df = pd.read_csv(DATA_PATH, sep=";", encoding="utf-8-sig")
-    df.columns = df.columns.str.strip()
-
-# 4. FIX DI EMERGENZA 2: Forza il nome della prima colonna se è corrotta da caratteri invisibili
-if "date" not in df.columns:
-    st.warning(f"⚠️ Colonna 'date' non trovata. Rin先进o la prima colonna da '{df.columns[0]}' a 'date'.")
-    df.rename(columns={df.columns[0]: "date"}, inplace=True)
-
-# Ora questa riga non fallirà MAI, perché le protezioni sopra ne garantiscono l'esistenza
+df = pd.read_csv(DATA_PATH)
 df["date"] = pd.to_datetime(df["date"])
 
 # =========================
@@ -312,7 +294,7 @@ monthly["Nmin_month"] = (
 # =========================
 
 crop_window = {
-    "winter cereals": [2, 3, 4, 5, 6, 8, 9, 10],
+    "winter cereals": list(range(10, 12)) + list(range(0, 5)),
     "maize": list(range(4, 9)),
     "soybean": list(range(4, 9)),
     "tomato": list(range(3, 9))
@@ -368,28 +350,9 @@ Delta_PAW = Delta_PAW_surface * root_access_factor
 from pathlib import Path
 import pandas as pd
 
-DATA_PATH = Path(__file__).parent / "data" / "Dati_Cordoba.csv"
+DATA_PATH = Path(__file__).parent / "data" / "era5_processed_daily_data_id_crp_103.csv"
 
-#1. Forza la lettura ignorando il BOM e rimuovendo gli spazi
-df = pd.read_csv(DATA_PATH, encoding="utf-8-sig")
-df.columns = df.columns.str.strip()
-
-# 2. DEBUG TEMPORANEO: Stampa le colonne reali su Streamlit per capire cosa vede Pandas
-st.write("### 🔍 Debug Colonne CSV Rilevate:")
-st.write(list(df.columns))
-
-# 3. FIX DI EMERGENZA: Se Pandas ha unito tutto a causa del punto e virgola (;), ri-analizza il DF
-if len(df.columns) == 1 and ";" in df.columns[0]:
-    st.warning("⚠️ Rilevato separatore ';' nel CSV. Tento la correzione automatica.")
-    df = pd.read_csv(DATA_PATH, sep=";", encoding="utf-8-sig")
-    df.columns = df.columns.str.strip()
-
-# 4. FIX DI EMERGENZA 2: Forza il nome della prima colonna se è corrotta da caratteri invisibili
-if "date" not in df.columns:
-    st.warning(f"⚠️ Colonna 'date' non trovata. Rin先进o la prima colonna da '{df.columns[0]}' a 'date'.")
-    df.rename(columns={df.columns[0]: "date"}, inplace=True)
-
-# Ora questa riga non fallirà MAI, perché le protezioni sopra ne garantiscono l'esistenza
+df = pd.read_csv(DATA_PATH)
 df["date"] = pd.to_datetime(df["date"])
 
 # -------------------------
@@ -621,11 +584,11 @@ Delta_W_harv = Delta_W_days * w_harv
 # 6. OPERATIONAL TRANSLATION
 # =========================
 
-H_pre = 1.2
-H_harv = 4.5
+H_pre = 2
+H_harv = 2.5
 
-F_pre = 6   # 👈 coerente con tuo vincolo (>10 L/ha pre-seeding)
-F_harv = 16
+F_pre = 12   # 👈 coerente con tuo vincolo (>10 L/ha pre-seeding)
+F_harv = 8
 
 H_saved = (Delta_W_pre * H_pre) + (Delta_W_harv * H_harv)
 F_saved = (Delta_W_pre * F_pre) + (Delta_W_harv * F_harv)
