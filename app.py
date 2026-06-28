@@ -218,11 +218,26 @@ import numpy as np
 
 DATA_PATH = Path(__file__).parent / "data" / "Dati_Cordoba.csv"
 
+1. Forza la lettura ignorando il BOM e rimuovendo gli spazi
 df = pd.read_csv(DATA_PATH, encoding="utf-8-sig")
-
-# Aggiungi questa riga per eliminare spazi nascosti nelle intestazioni
 df.columns = df.columns.str.strip()
 
+# 2. DEBUG TEMPORANEO: Stampa le colonne reali su Streamlit per capire cosa vede Pandas
+st.write("### 🔍 Debug Colonne CSV Rilevate:")
+st.write(list(df.columns))
+
+# 3. FIX DI EMERGENZA: Se Pandas ha unito tutto a causa del punto e virgola (;), ri-analizza il DF
+if len(df.columns) == 1 and ";" in df.columns[0]:
+    st.warning("⚠️ Rilevato separatore ';' nel CSV. Tento la correzione automatica.")
+    df = pd.read_csv(DATA_PATH, sep=";", encoding="utf-8-sig")
+    df.columns = df.columns.str.strip()
+
+# 4. FIX DI EMERGENZA 2: Forza il nome della prima colonna se è corrotta da caratteri invisibili
+if "date" not in df.columns:
+    st.warning(f"⚠️ Colonna 'date' non trovata. Rin先进o la prima colonna da '{df.columns[0]}' a 'date'.")
+    df.rename(columns={df.columns[0]: "date"}, inplace=True)
+
+# Ora questa riga non fallirà MAI, perché le protezioni sopra ne garantiscono l'esistenza
 df["date"] = pd.to_datetime(df["date"])
 
 # =========================
@@ -355,10 +370,27 @@ import pandas as pd
 
 DATA_PATH = Path(__file__).parent / "data" / "Dati_Cordoba.csv"
 
+1. Forza la lettura ignorando il BOM e rimuovendo gli spazi
 df = pd.read_csv(DATA_PATH, encoding="utf-8-sig")
-
-# Aggiungi questa riga per eliminare spazi nascosti nelle intestazioni
 df.columns = df.columns.str.strip()
+
+# 2. DEBUG TEMPORANEO: Stampa le colonne reali su Streamlit per capire cosa vede Pandas
+st.write("### 🔍 Debug Colonne CSV Rilevate:")
+st.write(list(df.columns))
+
+# 3. FIX DI EMERGENZA: Se Pandas ha unito tutto a causa del punto e virgola (;), ri-analizza il DF
+if len(df.columns) == 1 and ";" in df.columns[0]:
+    st.warning("⚠️ Rilevato separatore ';' nel CSV. Tento la correzione automatica.")
+    df = pd.read_csv(DATA_PATH, sep=";", encoding="utf-8-sig")
+    df.columns = df.columns.str.strip()
+
+# 4. FIX DI EMERGENZA 2: Forza il nome della prima colonna se è corrotta da caratteri invisibili
+if "date" not in df.columns:
+    st.warning(f"⚠️ Colonna 'date' non trovata. Rin先进o la prima colonna da '{df.columns[0]}' a 'date'.")
+    df.rename(columns={df.columns[0]: "date"}, inplace=True)
+
+# Ora questa riga non fallirà MAI, perché le protezioni sopra ne garantiscono l'esistenza
+df["date"] = pd.to_datetime(df["date"])
 
 # -------------------------
 # AGGREGATION MONTHLY
