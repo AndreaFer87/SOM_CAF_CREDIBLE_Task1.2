@@ -218,7 +218,11 @@ import numpy as np
 
 DATA_PATH = Path(__file__).parent / "data" / "Dati_Cordoba.csv"
 
-df = pd.read_csv(DATA_PATH)
+df = pd.read_csv(DATA_PATH, encoding="utf-8-sig")
+
+# Aggiungi questa riga per eliminare spazi nascosti nelle intestazioni
+df.columns = df.columns.str.strip()
+
 df["date"] = pd.to_datetime(df["date"])
 
 # =========================
@@ -351,8 +355,10 @@ import pandas as pd
 
 DATA_PATH = Path(__file__).parent / "data" / "Dati_Cordoba.csv"
 
-df = pd.read_csv(DATA_PATH)
-df["date"] = pd.to_datetime(df["date"])
+df = pd.read_csv(DATA_PATH, encoding="utf-8-sig")
+
+# Aggiungi questa riga per eliminare spazi nascosti nelle intestazioni
+df.columns = df.columns.str.strip()
 
 # -------------------------
 # AGGREGATION MONTHLY
