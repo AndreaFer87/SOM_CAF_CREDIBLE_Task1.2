@@ -312,7 +312,7 @@ monthly["Nmin_month"] = (
 # =========================
 
 crop_window = {
-    "winter cereals": [2, 3, 4, 5, 6, 8, 9, 10]),
+    "winter cereals": [2, 3, 4, 5, 6, 8, 9, 10],
     "maize": list(range(4, 9)),
     "soybean": list(range(4, 9)),
     "tomato": list(range(3, 9))
